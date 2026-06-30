@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_HOME="$(cd "$(dirname "$0")" && pwd -P)"
+PROPS_FILE="$APP_HOME/gradle/wrapper/gradle-wrapper.properties"
+
+if [[ ! -f "$PROPS_FILE" ]]; then
+  echo "Missing $PROPS_FILE" >&2
+  exit 1
+fi
+
+if ! command -v java >/dev/null 2>&1; then
+  echo "Java is required." >&2
+  exit 1
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl is required." >&2
+  exit 1
+fi
+
+if ! command -v unzip >/dev/null 2>&1; then
+  echo "unzip is required." >&2
+  exit 1
+fi
+
+DIST_URL="$(grep '^distributionUrl=' "$PROPS_FILE" | cut -d= -f2- | sed 's#\\##g')"
+if [[ -z "$DIST_URL" ]]; then
+  echo "distributionUrl not found in $PROPS_FILE" >&2
+  exit 1
+fi
+
+ZIP_NAME="${DIST_URL##*/}"
+DIST_NAME="${ZIP_NAME%.zip}"
+CACHE_DIR="${HOME}/.slid-gradle-wrapper"
+ZIP_PATH="${CACHE_DIR}/${ZIP_NAME}"
+EXTRACT_DIR="${CACHE_DIR}/${DIST_NAME}"
+
+mkdir -p "$CACHE_DIR"
+
+if [[ ! -x "${EXTRACT_DIR}/bin/gradle" ]]; then
+  if [[ ! -f "$ZIP_PATH" ]]; then
+    echo "Downloading ${DIST_URL}"
+    curl -L --fail --retry 3 "$DIST_URL" -o "$ZIP_PATH"
+  fi
+
+  TMP_DIR="$(mktemp -d "${CACHE_DIR}/tmp.XXXXXX")"
+  unzip -q "$ZIP_PATH" -d "$TMP_DIR"
+
+  INNER_DIR="$(find "$TMP_DIR" -maxdepth 1 -type d -name 'gradle-*' | head -n 1)"
+  if [[ -z "$INNER_DIR" ]]; then
+    echo "Could not unpack Gradle distribution." >&2
+    exit 1
+  fi
+
+  rm -rf "$EXTRACT_DIR"
+  mv "$INNER_DIR" "$EXTRACT_DIR"
+  rm -rf "$TMP_DIR"
+fi
+
+exec "${EXTRACT_DIR}/bin/gradle" --project-dir "$APP_HOME" "$@"

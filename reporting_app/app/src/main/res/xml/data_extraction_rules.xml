@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Keep offline immigration data out of cloud backup. -->
+        <exclude domain="root" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <!-- A new deployment should be provisioned through admin setup QR or server login. -->
+        <exclude domain="root" path="." />
+    </device-transfer>
+</data-extraction-rules>

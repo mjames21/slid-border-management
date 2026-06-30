@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SLIDBorderReporting" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.SLIDBorderReporting.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/slid_splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.SLIDBorderReporting</item>
+    </style>
+</resources>

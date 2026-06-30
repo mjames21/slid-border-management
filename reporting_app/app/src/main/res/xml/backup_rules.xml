@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Border reports, auth tokens, and encrypted local data must stay on the managed device. -->
+    <exclude domain="root" path="." />
+</full-backup-content>
