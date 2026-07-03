@@ -12,7 +12,7 @@ class CountryBoundaryImporter
 {
     private const MAX_BOUNDARY_BYTES = 20 * 1024 * 1024;
     private const MAX_FEATURES = 5000;
-    private const MAX_ZIP_ENTRIES = 20;
+    private const MAX_ZIP_ENTRIES = 250;
 
     public function import(Country $country, UploadedFile $file): array
     {
@@ -70,18 +70,49 @@ class CountryBoundaryImporter
                 ]);
             }
 
-            for ($index = 0; $index < $zip->numFiles; $index++) {
-                $name = (string) $zip->getNameIndex($index);
-                if (preg_match('/\.(geojson|json)$/i', $name)) {
-                    return $this->normalizeGeoJson($this->zipEntryContents($zip, $index));
-                }
-            }
+            $geoJsonIndexes = [];
+            $shapefileIndexes = [];
 
             for ($index = 0; $index < $zip->numFiles; $index++) {
                 $name = (string) $zip->getNameIndex($index);
-                if (preg_match('/\.shp$/i', $name)) {
-                    return $this->featureCollectionFromShp($this->zipEntryContents($zip, $index));
+
+                if ($this->shouldIgnoreZipEntry($name)) {
+                    continue;
                 }
+
+                if (preg_match('/\.(geojson|json)$/i', $name)) {
+                    $geoJsonIndexes[] = $index;
+                    continue;
+                }
+
+                if (preg_match('/\.shp$/i', $name)) {
+                    $shapefileIndexes[] = $index;
+                }
+            }
+
+            foreach ($this->prioritizeBoundaryCandidates($geoJsonIndexes, $zip) as $index) {
+                return $this->normalizeGeoJson($this->zipEntryContents($zip, $index));
+            }
+
+            $bestBoundary = null;
+
+            foreach ($this->prioritizeBoundaryCandidates($shapefileIndexes, $zip) as $index) {
+                try {
+                    $candidate = $this->featureCollectionFromShp($this->zipEntryContents($zip, $index));
+                } catch (ValidationException) {
+                    continue;
+                }
+
+                if (
+                    $bestBoundary === null
+                    || count($candidate['features']) < count($bestBoundary['features'])
+                ) {
+                    $bestBoundary = $candidate;
+                }
+            }
+
+            if ($bestBoundary !== null) {
+                return $bestBoundary;
             }
         } finally {
             $zip->close();
@@ -276,6 +307,53 @@ class CountryBoundaryImporter
             || str_contains($name, '../')
             || str_contains($name, '..\\')
             || preg_match('/^[A-Za-z]:[\\\\\\/]/', $name) === 1;
+    }
+
+    private function shouldIgnoreZipEntry(string $name): bool
+    {
+        $basename = basename($name);
+
+        return str_ends_with($name, '/')
+            || str_starts_with($name, '__MACOSX/')
+            || $basename === '.DS_Store'
+            || str_starts_with($basename, '._');
+    }
+
+    /**
+     * Real GIS exports often contain several polygon layers. Prefer country or
+     * region-level layers before detailed districts, chiefdoms, or sections.
+     *
+     * @param  array<int, int>  $indexes
+     * @return array<int, int>
+     */
+    private function prioritizeBoundaryCandidates(array $indexes, ZipArchive $zip): array
+    {
+        usort($indexes, function (int $left, int $right) use ($zip): int {
+            $leftName = strtolower((string) $zip->getNameIndex($left));
+            $rightName = strtolower((string) $zip->getNameIndex($right));
+
+            return $this->boundaryLayerRank($leftName) <=> $this->boundaryLayerRank($rightName)
+                ?: substr_count($leftName, '/') <=> substr_count($rightName, '/')
+                ?: $leftName <=> $rightName;
+        });
+
+        return $indexes;
+    }
+
+    private function boundaryLayerRank(string $name): int
+    {
+        $baseName = pathinfo(basename($name), PATHINFO_FILENAME);
+
+        return match (true) {
+            str_contains($baseName, 'country'),
+            str_contains($baseName, 'national'),
+            str_contains($baseName, 'boundary') => 0,
+            str_contains($baseName, 'region') => 10,
+            str_contains($baseName, 'district') => 20,
+            str_contains($baseName, 'chiefdom') => 30,
+            str_contains($baseName, 'section') => 40,
+            default => 50,
+        };
     }
 
     private function polygonFeatureFromRecord(string $binary, int $offset, int $contentLength): ?array

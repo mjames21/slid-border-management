@@ -71,6 +71,37 @@ class OperationsDashboardTest extends TestCase
         ])->assertSessionHasErrors('boundary_file');
     }
 
+    public function test_country_boundary_upload_accepts_gis_zip_with_metadata_files(): void
+    {
+        if (!class_exists(ZipArchive::class)) {
+            $this->markTestSkipped('PHP zip extension is not available.');
+        }
+
+        Storage::fake('public');
+
+        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+        $boundary = $this->zipUpload([
+            'GIS-ShapeFiles/.DS_Store' => 'metadata',
+            '__MACOSX/GIS-ShapeFiles/._regions' => 'metadata',
+            'GIS-ShapeFiles/readme.txt' => 'not boundary data',
+            'GIS-ShapeFiles/regions/regions.geojson' => json_encode($this->sampleBoundary()),
+        ]);
+
+        $this->actingAs($admin)->post('/admin/countries/SLE', [
+            'name' => 'Sierra Leone',
+            'immigration_agency' => 'Sierra Leone Immigration Service',
+            'app_title' => 'SLID Border Reporting',
+            'app_subtitle' => 'Sierra Leone Immigration Service',
+            'timezone' => 'Africa/Freetown',
+            'is_active' => '1',
+            'boundary_file' => $boundary,
+        ])->assertRedirect(route('admin.countries.index'));
+
+        $country = Country::query()->findOrFail('SLE');
+
+        Storage::disk('public')->assertExists($country->boundary_geojson_path);
+    }
+
     public function test_country_boundary_upload_rejects_zip_files_with_too_many_members(): void
     {
         if (!class_exists(ZipArchive::class)) {
@@ -80,7 +111,7 @@ class OperationsDashboardTest extends TestCase
         Storage::fake('public');
 
         $entries = [];
-        for ($index = 0; $index < 21; $index++) {
+        for ($index = 0; $index < 251; $index++) {
             $entries["notes-{$index}.txt"] = 'not boundary data';
         }
         $entries['boundary.geojson'] = json_encode($this->sampleBoundary());
