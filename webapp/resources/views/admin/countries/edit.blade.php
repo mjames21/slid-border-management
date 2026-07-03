@@ -1,6 +1,10 @@
 @extends('layouts.admin')
 
 @section('content')
+    <style>
+        .upload-progress{display:none;margin-top:12px;border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;padding:12px}.upload-progress.active{display:block}.upload-progress strong{display:flex;align-items:center;gap:8px;margin-bottom:8px}.spinner{width:16px;height:16px;border:2px solid #bbf7d0;border-top-color:#15803d;border-radius:999px;animation:spin .8s linear infinite}.upload-bar{height:8px;overflow:hidden;border-radius:999px;background:#d1fae5}.upload-bar span{display:block;width:42%;height:100%;border-radius:999px;background:#15803d;animation:progress-slide 1.1s ease-in-out infinite}button.is-loading{cursor:wait;opacity:.8}@keyframes spin{to{transform:rotate(360deg)}}@keyframes progress-slide{0%{transform:translateX(-110%)}100%{transform:translateX(250%)}}
+    </style>
+
     <div class="header">
         <div>
             <h1 class="title">Configure {{ $country->name }}</h1>
@@ -32,7 +36,7 @@
     </div>
 
     <div class="card">
-        <form method="POST" action="{{ route('admin.countries.update', $country) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('admin.countries.update', $country) }}" enctype="multipart/form-data" id="country_config_form">
             @csrf
             <div class="grid">
                 <div>
@@ -130,6 +134,9 @@
                     <label for="boundary_file">Country Boundary</label>
                     <input id="boundary_file" name="boundary_file" type="file" accept=".geojson,.json,.zip,.shp,application/geo+json,application/json,application/zip">
                     <div class="field-help">Upload GeoJSON or a zipped polygon shapefile. This powers the live reports map.</div>
+                    @error('boundary_file')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div>
                     <label>Current Boundary</label>
@@ -143,7 +150,44 @@
                     <label><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $country->is_active))> Active deployment profile</label>
                 </div>
             </div>
-            <p style="margin-top: 16px;"><button type="submit">Save Country Tenant</button></p>
+            <div class="upload-progress" id="country_boundary_upload_progress" role="status" aria-live="polite">
+                <strong><span class="spinner" aria-hidden="true"></span>Your country shapefile is uploading and processing.</strong>
+                <div class="upload-bar" aria-hidden="true"><span></span></div>
+                <div class="field-help">Please keep this page open. BorderReach is reading the boundary layer and updating the operational map.</div>
+            </div>
+            <p style="margin-top: 16px;"><button type="submit" data-saving-text="Saving..." data-boundary-loading-text="Uploading boundary...">Save Country Tenant</button></p>
         </form>
     </div>
+
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
+        (() => {
+            const form = document.getElementById('country_config_form');
+            if (!form) return;
+
+            const boundaryInput = document.getElementById('boundary_file');
+            const progress = document.getElementById('country_boundary_upload_progress');
+
+            form.addEventListener('submit', event => {
+                if (form.dataset.submitting === 'true') {
+                    event.preventDefault();
+                    return;
+                }
+
+                form.dataset.submitting = 'true';
+                const hasBoundaryFile = Boolean(boundaryInput?.files?.length);
+
+                if (hasBoundaryFile) {
+                    progress?.classList.add('active');
+                }
+
+                form.querySelectorAll('button[type="submit"]').forEach(button => {
+                    button.classList.add('is-loading');
+                    button.disabled = true;
+                    button.textContent = hasBoundaryFile
+                        ? button.dataset.boundaryLoadingText || 'Uploading boundary...'
+                        : button.dataset.savingText || 'Saving...';
+                });
+            });
+        })();
+    </script>
 @endsection

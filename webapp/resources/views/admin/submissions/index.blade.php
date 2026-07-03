@@ -21,14 +21,6 @@
         </div>
     </div>
 
-    <nav class="workspace-tabs" aria-label="Submission workspace tabs">
-        <a class="workspace-tab" href="{{ route('admin.dashboard.index') }}">Summary</a>
-        <a class="workspace-tab" href="{{ route('admin.forms.index') }}">Forms</a>
-        <a class="workspace-tab active" href="{{ route('admin.submissions.index') }}">Data</a>
-        <a class="workspace-tab" href="{{ route('admin.map.index') }}">Map</a>
-        <a class="workspace-tab" href="{{ route('admin.users.index') }}">Team</a>
-    </nav>
-
     <div class="workspace-tool-shell">
         <nav class="workspace-tool-nav" aria-label="Data tools">
             <a class="active" href="{{ route('admin.submissions.index') }}"><span class="workspace-tool-icon">TB</span>Table</a>

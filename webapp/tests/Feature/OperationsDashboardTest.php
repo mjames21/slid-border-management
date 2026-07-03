@@ -45,12 +45,16 @@ class OperationsDashboardTest extends TestCase
     {
         $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
 
-        $this->actingAs($admin)
+        $response = $this->actingAs($admin)
             ->get(route('admin.map.index'))
             ->assertOk()
+            ->assertHeader('Content-Security-Policy')
             ->assertSee('View Reports on Map')
             ->assertSee('Upload Boundary')
+            ->assertSee('<script nonce="', false)
             ->assertSee('Country boundary with GPS report points');
+
+        $this->assertStringContainsString("script-src 'self' 'nonce-", (string) $response->headers->get('Content-Security-Policy'));
     }
 
     public function test_country_boundary_upload_rejects_unapproved_extensions(): void
@@ -376,6 +380,27 @@ class OperationsDashboardTest extends TestCase
             ->assertJsonPath('latestReports.0.documentNumber', 'P1234567');
     }
 
+    public function test_dashboard_data_simplifies_large_boundaries_for_map_rendering(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+        $country = Country::query()->findOrFail('SLE');
+        $country->forceFill([
+            'boundary_geojson_path' => 'country-boundaries/SLE.geojson',
+            'boundary_source_name' => 'sections.geojson',
+            'boundary_source_type' => 'geojson',
+            'boundary_imported_at' => now(),
+        ])->save();
+        Storage::disk('public')->put('country-boundaries/SLE.geojson', json_encode($this->largeBoundary()));
+
+        $this->actingAs($admin)->getJson('/admin/dashboard/data?country_code=SLE&hours=24')
+            ->assertOk()
+            ->assertJsonPath('boundary.type', 'FeatureCollection')
+            ->assertJsonPath('boundaryMeta.simplified', true)
+            ->assertJsonPath('boundaryMeta.coordinateCount', 45002);
+    }
+
     public function test_admin_can_save_dashboard_view(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
@@ -421,6 +446,33 @@ class OperationsDashboardTest extends TestCase
                         [-13.5, 10.1],
                         [-13.5, 6.8],
                     ]],
+                ],
+            ]],
+        ];
+    }
+
+    private function largeBoundary(): array
+    {
+        $ring = [];
+
+        for ($index = 0; $index < 45001; $index++) {
+            $angle = ($index / 45000) * 2 * pi();
+            $ring[] = [
+                round(-11.8 + cos($angle), 7),
+                round(8.5 + sin($angle), 7),
+            ];
+        }
+
+        $ring[] = $ring[0];
+
+        return [
+            'type' => 'FeatureCollection',
+            'features' => [[
+                'type' => 'Feature',
+                'properties' => ['name' => 'Dense sections'],
+                'geometry' => [
+                    'type' => 'Polygon',
+                    'coordinates' => [$ring],
                 ],
             ]],
         ];

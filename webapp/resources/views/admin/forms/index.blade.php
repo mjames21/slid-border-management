@@ -16,14 +16,6 @@
         </div>
     </div>
 
-    <nav class="workspace-tabs" aria-label="Workspace tabs">
-        <a class="workspace-tab active" href="{{ route('admin.projects.index') }}">Projects</a>
-        <a class="workspace-tab" href="{{ route('admin.submissions.index') }}">Data</a>
-        <a class="workspace-tab" href="{{ route('admin.dashboard.index') }}">Analysis</a>
-        <a class="workspace-tab" href="{{ route('admin.map.index') }}">Map</a>
-        <a class="workspace-tab" href="{{ route('admin.users.index') }}">Team</a>
-    </nav>
-
     <div class="metric-strip">
         <div class="metric-card"><span>Total projects</span><strong>{{ number_format($summary['total']) }}</strong></div>
         <div class="metric-card"><span>Published</span><strong>{{ number_format($summary['published']) }}</strong></div>

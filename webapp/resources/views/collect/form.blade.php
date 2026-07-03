@@ -246,7 +246,7 @@
         </form>
     </main>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         const statusEl = document.getElementById('location-status');
         const captureButton = document.getElementById('capture-location');
 

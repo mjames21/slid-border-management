@@ -94,25 +94,12 @@ class CountryBoundaryImporter
                 return $this->normalizeGeoJson($this->zipEntryContents($zip, $index));
             }
 
-            $bestBoundary = null;
-
             foreach ($this->prioritizeBoundaryCandidates($shapefileIndexes, $zip) as $index) {
                 try {
-                    $candidate = $this->featureCollectionFromShp($this->zipEntryContents($zip, $index));
+                    return $this->featureCollectionFromShp($this->zipEntryContents($zip, $index));
                 } catch (ValidationException) {
                     continue;
                 }
-
-                if (
-                    $bestBoundary === null
-                    || count($candidate['features']) < count($bestBoundary['features'])
-                ) {
-                    $bestBoundary = $candidate;
-                }
-            }
-
-            if ($bestBoundary !== null) {
-                return $bestBoundary;
             }
         } finally {
             $zip->close();

@@ -14,14 +14,6 @@
         </div>
     </div>
 
-    <nav class="workspace-tabs" aria-label="Integration workspace tabs">
-        <a class="workspace-tab" href="{{ route('admin.projects.index') }}">Projects</a>
-        <a class="workspace-tab" href="{{ route('admin.submissions.index') }}">Data</a>
-        <a class="workspace-tab" href="{{ route('admin.dashboard.index') }}">Analysis</a>
-        <a class="workspace-tab active" href="{{ route('admin.webhooks.index') }}">REST Services</a>
-        <a class="workspace-tab" href="{{ route('admin.users.index') }}">Team</a>
-    </nav>
-
     <div class="workspace-tool-shell">
         <nav class="workspace-tool-nav" aria-label="Project settings">
             <a href="{{ route('admin.projects.index') }}"><span class="workspace-tool-icon">GN</span>General</a>

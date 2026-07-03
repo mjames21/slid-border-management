@@ -61,4 +61,14 @@ class UpdateCountryBrandingRequest extends FormRequest
             'boundary_file' => ['nullable', 'file', 'max:20480', 'extensions:geojson,json,zip,shp'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'boundary_file.file' => 'The country boundary upload was not received as a valid file. Check the server upload settings and try again.',
+            'boundary_file.max' => 'The country boundary file is larger than 20MB. Upload a smaller GeoJSON or zipped shapefile.',
+            'boundary_file.extensions' => 'Upload GeoJSON, JSON, ZIP shapefile, or SHP only.',
+            'boundary_file.uploaded' => 'The country boundary file could not be uploaded. The server upload limit may be too low; set upload_max_filesize to at least 25M and post_max_size to at least 30M.',
+        ];
+    }
 }

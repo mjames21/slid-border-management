@@ -57,14 +57,6 @@
         </div>
     </div>
 
-    <nav class="workspace-tabs" aria-label="Form builder tabs">
-        <a class="workspace-tab" href="{{ route('admin.forms.index') }}">Summary</a>
-        <a class="workspace-tab active" href="{{ $form ? route('admin.forms.builder.edit', $form) : route('admin.forms.builder') }}">Form</a>
-        <a class="workspace-tab" href="{{ route('admin.submissions.index') }}">Data</a>
-        <a class="workspace-tab" href="{{ route('admin.map.index') }}">Map</a>
-        <a class="workspace-tab" href="{{ route('admin.users.index') }}">Team</a>
-    </nav>
-
     @unless($form)
         <div class="panel" style="margin-bottom:20px;">
             <div class="panel-head">

@@ -2,7 +2,7 @@
 
 @section('content')
     <style>
-        .map-page-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}.map-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.map-controls>div{min-width:180px}.map-shell{border:1px solid #dce3ee;background:#fff}.map-stage{height:640px;min-height:420px;padding:14px}.report-map-svg{width:100%;height:100%;border:1px solid #dbe3ea;border-radius:8px;background:#eef6f3}.report-map-boundary{fill:#d9f2e5;stroke:#0f766e;stroke-width:1.5;fill-rule:evenodd}.report-map-point{cursor:pointer;stroke:#fff;stroke-width:1.5}.report-map-point.accepted{fill:#2563eb}.report-map-point.rejected,.report-map-point.failed{fill:#dc2626}.report-map-point.selected{stroke:#111827;stroke-width:2.5}.map-side{display:grid;gap:14px;align-content:start}.map-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.map-stat{border:1px solid #dce3ee;background:#fff;padding:13px}.map-stat label{margin:0;color:#64748b}.map-stat strong{display:block;margin-top:5px;color:#1f2937;font-size:24px;line-height:1}.map-report-list{max-height:420px;overflow:auto}.map-report-item{display:block;border-bottom:1px solid #e5e7eb;color:#1f2937;text-decoration:none;padding:11px 0}.map-report-item:hover,.map-report-item.selected{background:#f8fafc}.map-report-item strong{display:block}.map-report-item span{display:block;color:#64748b;font-size:12px;margin-top:2px}.map-empty{color:#64748b;padding:24px;text-align:center}.map-empty strong{display:block;color:#1f2937;margin-bottom:6px}.map-detail-row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;border-bottom:1px solid #eef2f6;padding:8px 0}.map-detail-row dt{color:#64748b;font-weight:800}.map-detail-row dd{margin:0;word-break:break-word}.legend{display:flex;gap:12px;flex-wrap:wrap;color:#64748b;font-size:12px}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:999px;background:#2563eb}.legend .review i{background:#dc2626}.map-config-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-bottom:18px}.map-config-card{border:1px solid #dce3ee;background:#fff;padding:16px}.map-config-card h3{margin:0 0 6px;color:#1f2937;font-size:17px}.map-config-card p{margin:0 0 12px;color:#64748b;line-height:1.45}.compact-upload{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.compact-upload input[type=file]{padding:10px;background:#f8fafc}@media(max-width:1100px){.map-page-grid,.map-config-grid{grid-template-columns:1fr}.map-side{grid-template-columns:repeat(2,minmax(0,1fr))}.map-side .panel{min-width:0}}@media(max-width:720px){.map-controls,.map-page-grid,.map-side,.map-stat-grid,.compact-upload{grid-template-columns:1fr}.map-stage{height:460px;padding:10px}.map-detail-row{grid-template-columns:1fr}}
+        .map-page-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}.map-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.map-controls>div{min-width:180px}.map-shell{border:1px solid #dce3ee;background:#fff}.map-stage{height:640px;min-height:420px;padding:14px}.report-map-svg{width:100%;height:100%;border:1px solid #dbe3ea;border-radius:8px;background:#eef6f3}.report-map-boundary{fill:#d9f2e5;stroke:#0f766e;stroke-width:1.5;fill-rule:evenodd}.report-map-point{cursor:pointer;stroke:#fff;stroke-width:1.5}.report-map-point.accepted{fill:#2563eb}.report-map-point.rejected,.report-map-point.failed{fill:#dc2626}.report-map-point.selected{stroke:#111827;stroke-width:2.5}.map-side{display:grid;gap:14px;align-content:start}.map-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.map-stat{border:1px solid #dce3ee;background:#fff;padding:13px}.map-stat label{margin:0;color:#64748b}.map-stat strong{display:block;margin-top:5px;color:#1f2937;font-size:24px;line-height:1}.map-report-list{max-height:420px;overflow:auto}.map-report-item{display:block;border-bottom:1px solid #e5e7eb;color:#1f2937;text-decoration:none;padding:11px 0}.map-report-item:hover,.map-report-item.selected{background:#f8fafc}.map-report-item strong{display:block}.map-report-item span{display:block;color:#64748b;font-size:12px;margin-top:2px}.map-empty{color:#64748b;padding:24px;text-align:center}.map-empty strong{display:block;color:#1f2937;margin-bottom:6px}.map-detail-row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;border-bottom:1px solid #eef2f6;padding:8px 0}.map-detail-row dt{color:#64748b;font-weight:800}.map-detail-row dd{margin:0;word-break:break-word}.legend{display:flex;gap:12px;flex-wrap:wrap;color:#64748b;font-size:12px}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:999px;background:#2563eb}.legend .review i{background:#dc2626}.map-config-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-bottom:18px}.map-config-card{border:1px solid #dce3ee;background:#fff;padding:16px}.map-config-card h3{margin:0 0 6px;color:#1f2937;font-size:17px}.map-config-card p{margin:0 0 12px;color:#64748b;line-height:1.45}.compact-upload{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.compact-upload input[type=file]{padding:10px;background:#f8fafc}.upload-progress{display:none;margin-top:12px;border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;padding:12px}.upload-progress.active{display:block}.upload-progress strong{display:flex;align-items:center;gap:8px;margin-bottom:8px}.spinner{width:16px;height:16px;border:2px solid #bbf7d0;border-top-color:#15803d;border-radius:999px;animation:spin .8s linear infinite}.upload-bar{height:8px;overflow:hidden;border-radius:999px;background:#d1fae5}.upload-bar span{display:block;width:42%;height:100%;border-radius:999px;background:#15803d;animation:progress-slide 1.1s ease-in-out infinite}button.is-loading{cursor:wait;opacity:.8}@keyframes spin{to{transform:rotate(360deg)}}@keyframes progress-slide{0%{transform:translateX(-110%)}100%{transform:translateX(250%)}}@media(max-width:1100px){.map-page-grid,.map-config-grid{grid-template-columns:1fr}.map-side{grid-template-columns:repeat(2,minmax(0,1fr))}.map-side .panel{min-width:0}}@media(max-width:720px){.map-controls,.map-page-grid,.map-side,.map-stat-grid,.compact-upload{grid-template-columns:1fr}.map-stage{height:460px;padding:10px}.map-detail-row{grid-template-columns:1fr}}
     </style>
 
     <div id="report-map-page"
@@ -42,8 +42,16 @@
                             <label for="map_boundary_file">Boundary file</label>
                             <input id="map_boundary_file" name="boundary_file" type="file" accept=".geojson,.json,.zip,.shp,application/geo+json,application/json,application/zip" required>
                             <div class="field-help">Accepted: GeoJSON, JSON, ZIP shapefile, or SHP. Max 20MB.</div>
+                            @error('boundary_file')
+                                <div class="field-error">{{ $message }}</div>
+                            @enderror
                         </div>
-                        <button type="submit">Upload Boundary</button>
+                        <button type="submit" data-loading-text="Uploading boundary...">Upload Boundary</button>
+                    </div>
+                    <div class="upload-progress" id="map_boundary_upload_progress" role="status" aria-live="polite">
+                        <strong><span class="spinner" aria-hidden="true"></span>Your country shapefile is uploading and processing.</strong>
+                        <div class="upload-bar" aria-hidden="true"><span></span></div>
+                        <div class="field-help">Please keep this page open. Large GIS ZIP files can take a moment while BorderReach reads the boundary layer.</div>
                     </div>
                 </form>
             </div>
@@ -138,7 +146,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ request()->attributes->get('csp_nonce') }}">
         (() => {
             const page = document.querySelector('[data-map-page]');
             if (!page) return;
@@ -151,6 +159,7 @@
             const boundaryLink = document.getElementById('map_boundary_link');
             const countryConfigLink = document.getElementById('map_country_config_link');
             const boundaryUploadForm = document.getElementById('map_boundary_upload_form');
+            const boundaryUploadProgress = document.getElementById('map_boundary_upload_progress');
 
             document.getElementById('map_refresh_button').addEventListener('click', loadMap);
             countrySelect.addEventListener('change', loadMap);
@@ -161,8 +170,31 @@
                     loadMap();
                 }
             });
+            boundaryUploadForm.addEventListener('submit', lockBoundaryUpload);
 
             loadMap();
+
+            function lockBoundaryUpload(event) {
+                if (boundaryUploadForm.dataset.submitting === 'true') {
+                    event.preventDefault();
+                    return;
+                }
+
+                const fileInput = boundaryUploadForm.querySelector('input[type="file"]');
+                if (!fileInput?.files?.length) {
+                    return;
+                }
+
+                boundaryUploadForm.dataset.submitting = 'true';
+                boundaryUploadProgress?.classList.add('active');
+                boundaryUploadForm.querySelectorAll('button, a').forEach(control => {
+                    control.classList.add('is-loading');
+                    if (control.tagName === 'BUTTON') {
+                        control.disabled = true;
+                        control.textContent = control.dataset.loadingText || 'Uploading...';
+                    }
+                });
+            }
 
             async function loadMap() {
                 updateBoundaryLink();

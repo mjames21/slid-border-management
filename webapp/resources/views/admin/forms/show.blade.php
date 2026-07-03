@@ -227,7 +227,7 @@
         </div>
 @endforeach
 
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
     document.querySelectorAll('[data-copy-url]').forEach((button) => {
         button.addEventListener('click', async () => {
             try {

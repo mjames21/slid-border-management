@@ -283,6 +283,7 @@
         .tag.draft, .tag.queued { background: #fff5d7; color: #8a5a00; }
         .tag.rejected, .tag.failed { background: #ffe6e4; color: var(--danger); }
         .field-help { margin-top: 6px; color: var(--muted); font-size: 12px; }
+        .field-error { margin-top: 7px; color: var(--danger); font-size: 12px; font-weight: 760; }
         .record-title { color: var(--title); font-weight: 880; }
         .record-muted { color: var(--muted); font-size: 13px; }
         .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }

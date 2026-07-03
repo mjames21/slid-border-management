@@ -94,7 +94,7 @@ class AdminCountryController extends Controller
     {
         $validated = $request->validate([
             'boundary_file' => ['required', 'file', 'max:20480', 'extensions:geojson,json,zip,shp'],
-        ]);
+        ], $this->boundaryUploadMessages());
 
         if ($country->boundary_geojson_path) {
             Storage::disk('public')->delete($country->boundary_geojson_path);
@@ -110,5 +110,16 @@ class AdminCountryController extends Controller
         ], request: $request);
 
         return back()->with('status', "{$country->name} map boundary uploaded.");
+    }
+
+    private function boundaryUploadMessages(): array
+    {
+        return [
+            'boundary_file.required' => 'Choose a GeoJSON or zipped polygon shapefile before uploading the boundary.',
+            'boundary_file.file' => 'The boundary upload was not received as a valid file. Check the server upload settings and try again.',
+            'boundary_file.max' => 'The boundary file is larger than 20MB. Upload a smaller GeoJSON or zipped shapefile.',
+            'boundary_file.extensions' => 'Upload GeoJSON, JSON, ZIP shapefile, or SHP only.',
+            'boundary_file.uploaded' => 'The boundary file could not be uploaded. The server upload limit may be too low; set upload_max_filesize to at least 25M and post_max_size to at least 30M.',
+        ];
     }
 }

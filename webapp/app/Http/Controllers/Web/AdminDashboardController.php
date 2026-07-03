@@ -81,6 +81,9 @@ class AdminDashboardController extends Controller
             ->map(fn (MobileSubmission $submission) => $this->serializeSubmission($submission))
             ->values();
 
+        $boundary = $boundaries->readBoundary($country);
+        [$mapBoundary, $boundaryCoordinateCount] = $this->mapBoundary($boundary);
+
         return response()->json([
             'generatedAt' => now()->toIso8601String(),
             'country' => [
@@ -93,7 +96,11 @@ class AdminDashboardController extends Controller
             'filters' => $filters,
             'query' => $search,
             'filterOptions' => $this->filterOptions($country),
-            'boundary' => $boundaries->readBoundary($country),
+            'boundary' => $mapBoundary,
+            'boundaryMeta' => [
+                'coordinateCount' => $boundaryCoordinateCount,
+                'simplified' => $mapBoundary !== $boundary,
+            ],
             'metrics' => [
                 'total' => $total,
                 'withLocation' => $withLocation,
@@ -307,6 +314,83 @@ class AdminDashboardController extends Controller
             'syncLatency' => $this->syncLatency($rows),
             'dataQuality' => $this->dataQuality($rows),
         ];
+    }
+
+    private function mapBoundary(?array $boundary): array
+    {
+        if (!$boundary) {
+            return [null, 0];
+        }
+
+        $coordinateCount = $this->boundaryCoordinateCount($boundary);
+        $maxMapCoordinates = 40000;
+
+        if ($coordinateCount <= $maxMapCoordinates) {
+            return [$boundary, $coordinateCount];
+        }
+
+        $stride = (int) ceil($coordinateCount / $maxMapCoordinates);
+
+        return [$this->simplifyBoundaryNode($boundary, $stride), $coordinateCount];
+    }
+
+    private function boundaryCoordinateCount(?array $node): int
+    {
+        if (!$node) {
+            return 0;
+        }
+
+        return match ($node['type'] ?? null) {
+            'FeatureCollection' => collect($node['features'] ?? [])->sum(fn ($feature) => $this->boundaryCoordinateCount($feature)),
+            'Feature' => $this->boundaryCoordinateCount($node['geometry'] ?? null),
+            'GeometryCollection' => collect($node['geometries'] ?? [])->sum(fn ($geometry) => $this->boundaryCoordinateCount($geometry)),
+            'Polygon' => collect($node['coordinates'] ?? [])->sum(fn ($ring) => is_array($ring) ? count($ring) : 0),
+            'MultiPolygon' => collect($node['coordinates'] ?? [])->sum(fn ($polygon) => collect($polygon)->sum(fn ($ring) => is_array($ring) ? count($ring) : 0)),
+            default => 0,
+        };
+    }
+
+    private function simplifyBoundaryNode(array $node, int $stride): array
+    {
+        return match ($node['type'] ?? null) {
+            'FeatureCollection' => array_replace($node, [
+                'features' => array_map(fn ($feature) => $this->simplifyBoundaryNode($feature, $stride), $node['features'] ?? []),
+            ]),
+            'Feature' => array_replace($node, [
+                'geometry' => isset($node['geometry']) ? $this->simplifyBoundaryNode($node['geometry'], $stride) : null,
+            ]),
+            'GeometryCollection' => array_replace($node, [
+                'geometries' => array_map(fn ($geometry) => $this->simplifyBoundaryNode($geometry, $stride), $node['geometries'] ?? []),
+            ]),
+            'Polygon' => array_replace($node, [
+                'coordinates' => array_map(fn ($ring) => $this->simplifyBoundaryRing($ring, $stride), $node['coordinates'] ?? []),
+            ]),
+            'MultiPolygon' => array_replace($node, [
+                'coordinates' => array_map(
+                    fn ($polygon) => array_map(fn ($ring) => $this->simplifyBoundaryRing($ring, $stride), $polygon),
+                    $node['coordinates'] ?? []
+                ),
+            ]),
+            default => $node,
+        };
+    }
+
+    private function simplifyBoundaryRing(array $ring, int $stride): array
+    {
+        if ($stride <= 1 || count($ring) <= 12) {
+            return $ring;
+        }
+
+        $lastIndex = count($ring) - 1;
+        $simplified = [];
+
+        foreach ($ring as $index => $coordinate) {
+            if ($index === 0 || $index === $lastIndex || $index % $stride === 0) {
+                $simplified[] = $coordinate;
+            }
+        }
+
+        return count($simplified) >= 4 ? $simplified : $ring;
     }
 
     private function timelineBuckets($rows, int $hours): array

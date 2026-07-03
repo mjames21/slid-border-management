@@ -10,6 +10,9 @@ class SecurityHeaders
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $nonce = base64_encode(random_bytes(16));
+        $request->attributes->set('csp_nonce', $nonce);
+
         $response = $next($request);
 
         // These headers reduce common browser-side attack paths such as clickjacking and MIME sniffing.
@@ -29,7 +32,7 @@ class SecurityHeaders
         if (!$request->expectsJson()) {
             $response->headers->set(
                 'Content-Security-Policy',
-                "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+                "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; img-src 'self' data:; script-src 'self' 'nonce-{$nonce}'; style-src 'self' 'unsafe-inline'"
             );
         }
 

@@ -125,7 +125,13 @@ php artisan forms:import-fixture tests/Fixtures/slid_border_reporting.xlsx --pub
 npm install
 npm run build
 php artisan test
-php artisan serve --host=0.0.0.0 --port=8000
+composer run serve
+```
+
+`composer run serve` starts Laravel with GIS-safe upload limits for country boundary files. If you start the server manually, use:
+
+```bash
+php -d upload_max_filesize=25M -d post_max_size=30M -d max_execution_time=3600 -d max_input_time=120 artisan serve --host=0.0.0.0 --port=8000
 ```
 
 ## Production hosting checklist
@@ -138,7 +144,8 @@ Security hardening is tracked against the official OWASP Top 10:2025 checklist i
 2. Set `APP_KEY`, `APP_URL`, `MOBILE_SETUP_HOST`, `TRUSTED_HOSTS`, database credentials, mail credentials, and a controlled `TRUSTED_PROXIES` value if the app is behind Nginx, a load balancer, Cloudflare, Forge, or another reverse proxy.
 3. Keep `APP_ENV=production`, `APP_DEBUG=false`, `APP_FORCE_HTTPS=true`, `SESSION_ENCRYPT=true`, and `SESSION_SECURE_COOKIE=true`.
 4. Point the web server document root to `webapp/public` only. Never expose the project root, `.env`, `storage`, `database`, or `vendor` as public web paths.
-5. Install and build:
+5. Set PHP/Nginx upload limits for GIS boundaries: `upload_max_filesize=25M`, `post_max_size=30M`, and web server request body size at least `30M`.
+6. Install and build:
 
 ```bash
 composer install --no-dev --optimize-autoloader
