@@ -5,6 +5,12 @@ const builderQuestionCards = () => Array.from(document.querySelectorAll('.builde
 
 const getBuilderValue = (card, field) => card.querySelector(`[name$="[${field}]"]`)?.value?.trim() ?? '';
 
+const isBuilderTabOpen = (tabName) => {
+    const panel = document.querySelector(`[data-builder-tab-panel="${tabName}"]`);
+
+    return panel ? !panel.hidden : false;
+};
+
 const updateBuilderSelectedCount = () => {
     const countLabel = document.querySelector('.selected-count');
 
@@ -22,15 +28,15 @@ const updateBuilderSelectedCount = () => {
     countLabel.textContent = `${included} configured fields`;
 };
 
-const scrollToPanel = (panel) => {
-    if (!panel) {
+const updateQuestionLibraryCount = () => {
+    const availableTag = document.querySelector('[data-question-library-count]');
+
+    if (!availableTag) {
         return;
     }
 
-    panel.hidden = false;
-    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    panel.classList.add('is-highlighted');
-    window.setTimeout(() => panel.classList.remove('is-highlighted'), 1200);
+    const remaining = document.querySelectorAll('#question-library .question-library-card').length;
+    availableTag.textContent = `${remaining} available`;
 };
 
 const renderMobileFlowPreview = () => {
@@ -82,7 +88,36 @@ const renderMobileFlowPreview = () => {
     });
 };
 
+const showBuilderTab = (tabName) => {
+    const panels = document.querySelectorAll('[data-builder-tab-panel]');
+
+    if (panels.length === 0) {
+        return;
+    }
+
+    document.querySelectorAll('[data-builder-tab]').forEach((tab) => {
+        const isActive = tab.getAttribute('data-builder-tab') === tabName;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+
+    panels.forEach((panel) => {
+        panel.hidden = panel.getAttribute('data-builder-tab-panel') !== tabName;
+    });
+
+    if (tabName === 'preview') {
+        renderMobileFlowPreview();
+    }
+};
+
 document.addEventListener('click', (event) => {
+    const tabTrigger = event.target.closest('[data-builder-tab]');
+    if (tabTrigger) {
+        event.preventDefault();
+        showBuilderTab(tabTrigger.getAttribute('data-builder-tab'));
+        return;
+    }
+
     const selectAllTrigger = event.target.closest('[data-builder-select-all]');
     if (selectAllTrigger) {
         event.preventDefault();
@@ -91,7 +126,7 @@ document.addEventListener('click', (event) => {
         });
         updateBuilderSelectedCount();
 
-        if (!document.getElementById('mobile-flow-preview')?.hidden) {
+        if (isBuilderTabOpen('preview')) {
             renderMobileFlowPreview();
         }
         return;
@@ -105,7 +140,7 @@ document.addEventListener('click', (event) => {
         });
         updateBuilderSelectedCount();
 
-        if (!document.getElementById('mobile-flow-preview')?.hidden) {
+        if (isBuilderTabOpen('preview')) {
             renderMobileFlowPreview();
         }
         return;
@@ -114,25 +149,21 @@ document.addEventListener('click', (event) => {
     const libraryTrigger = event.target.closest('[data-open-question-library]');
     if (libraryTrigger) {
         event.preventDefault();
-        scrollToPanel(document.getElementById('question-library'));
+        showBuilderTab('library');
         return;
     }
 
     const previewTrigger = event.target.closest('[data-open-mobile-preview]');
     if (previewTrigger) {
         event.preventDefault();
-        renderMobileFlowPreview();
-        scrollToPanel(document.getElementById('mobile-flow-preview'));
+        showBuilderTab('preview');
         return;
     }
 
     const closePreviewTrigger = event.target.closest('[data-close-mobile-preview]');
     if (closePreviewTrigger) {
         event.preventDefault();
-        const panel = document.getElementById('mobile-flow-preview');
-        if (panel) {
-            panel.hidden = true;
-        }
+        showBuilderTab('form');
         return;
     }
 
@@ -151,20 +182,16 @@ document.addEventListener('click', (event) => {
 
     checkbox.checked = true;
     card.classList.remove('builder-question-excluded');
+    showBuilderTab('form');
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     card.querySelector('input[type="text"], select, textarea')?.focus({ preventScroll: true });
 
     addQuestionTrigger.closest('.question-library-card')?.remove();
-
-    const availableTag = document.querySelector('#question-library .tag');
-    if (availableTag) {
-        const remaining = document.querySelectorAll('#question-library .question-library-card').length;
-        availableTag.textContent = `${remaining} available`;
-    }
+    updateQuestionLibraryCount();
 
     updateBuilderSelectedCount();
 
-    if (!document.getElementById('mobile-flow-preview')?.hidden) {
+    if (isBuilderTabOpen('preview')) {
         renderMobileFlowPreview();
     }
 });
@@ -176,7 +203,7 @@ document.addEventListener('change', (event) => {
 
     updateBuilderSelectedCount();
 
-    if (!document.getElementById('mobile-flow-preview')?.hidden) {
+    if (isBuilderTabOpen('preview')) {
         renderMobileFlowPreview();
     }
 });

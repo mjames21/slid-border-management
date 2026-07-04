@@ -5,22 +5,13 @@
         <div>
             <div class="workspace-crumb">BorderReach / Workspace</div>
             <h1 class="workspace-title">Projects</h1>
-            <p class="subtitle">Manage standardized border reporting projects, publish mobile forms, and review synced records from one workspace.</p>
+            <p class="subtitle">Create, publish, and review standardized border reporting projects.</p>
         </div>
         <div class="workspace-meta">
             <span class="tag">{{ number_format($summary['total']) }} projects</span>
-            <span class="tag">{{ number_format($summary['templates'] ?? 0) }} templates</span>
             <span class="tag published">{{ number_format($summary['published']) }} published</span>
-            <span class="tag">{{ number_format($summary['submissions']) }} records on this page</span>
             <a class="tool-button primary" href="{{ route('admin.forms.builder') }}">New Project</a>
         </div>
-    </div>
-
-    <div class="metric-strip">
-        <div class="metric-card"><span>Total projects</span><strong>{{ number_format($summary['total']) }}</strong></div>
-        <div class="metric-card"><span>Published</span><strong>{{ number_format($summary['published']) }}</strong></div>
-        <div class="metric-card"><span>Draft only</span><strong>{{ number_format($summary['drafts']) }}</strong></div>
-        <div class="metric-card"><span>Visible records</span><strong>{{ number_format($summary['submissions']) }}</strong></div>
     </div>
 
     <div class="project-toolbar">
@@ -51,81 +42,15 @@
             </div>
         </form>
         <div class="actions">
-            <a class="button" href="#template-library">Browse Templates</a>
+            <a class="button" href="#template-library">Templates</a>
             <a class="button light" href="{{ route('admin.forms.create') }}">Upload XLSForm</a>
         </div>
     </div>
 
-    <section id="template-library" class="panel" style="margin-bottom:20px;">
-        <div class="panel-head">
-            <div>
-                <h2 class="panel-title">Template Library</h2>
-                <p class="panel-subtitle">Clone a protected standards baseline into a project, then adapt it in the Form builder and publish that project for field use.</p>
-            </div>
-            <span class="tag">{{ number_format($templateForms->count()) }} protected templates</span>
-        </div>
-        <div class="template-grid template-grid-wide" style="padding:18px;">
-            @forelse($templateForms as $template)
-                @php
-                    $summaryData = $template->template_summary ?: [];
-                    $sections = collect($summaryData['sections'] ?? []);
-                    $sampleFields = $sections
-                        ->flatMap(fn ($section) => $section['fields'] ?? [])
-                        ->take(5)
-                        ->values();
-                @endphp
-                <article class="template-card template-card-detailed">
-                    <div class="template-card-head">
-                        <div>
-                            <span class="template-kicker">{{ $template->moduleLabel() }}</span>
-                            <h3>{{ $template->title }}</h3>
-                        </div>
-                        <span class="tag">{{ number_format((int) ($summaryData['field_count'] ?? 0)) }} fields</span>
-                    </div>
-                    <p>{{ $template->template_description ?: 'Standards-backed report template ready to copy into an operational project.' }}</p>
-                    <div class="template-standard">{{ $template->publishedVersion?->compiled_schema['standardReference'] ?? \App\Models\DynamicForm::standardReferenceForModule($template->reporting_module) }}</div>
-
-                    @if($sections->isNotEmpty())
-                        <div class="template-section-list">
-                            @foreach($sections->take(3) as $section)
-                                <div>
-                                    <strong>{{ $section['title'] }}</strong>
-                                    <span>{{ $section['field_count'] }} fields · {{ $section['purpose'] }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    @if($sampleFields->isNotEmpty())
-                        <div class="template-field-chips" aria-label="Example fields">
-                            @foreach($sampleFields as $field)
-                                <span>{{ $field['label'] }}</span>
-                            @endforeach
-                        </div>
-                    @endif
-
-                    <div class="template-actions">
-                        <form method="POST" action="{{ route('admin.forms.templates.clone', $template) }}">
-                            @csrf
-                            <input type="hidden" name="country_code" value="{{ $filters['country_code'] ?: $template->country_code }}">
-                            <button type="submit">Clone Template</button>
-                        </form>
-                        <a class="button light" href="{{ route('admin.forms.show', $template) }}">Preview</a>
-                    </div>
-                </article>
-            @empty
-                <div class="empty-state">
-                    <h3>No templates loaded</h3>
-                    <p>Run the template seeder to load the ICAO, WCO, WHO, and security starter templates.</p>
-                </div>
-            @endforelse
-        </div>
-    </section>
-
     <div class="section-heading-row">
         <div>
             <h2>Operational Projects</h2>
-            <p>These are editable form projects that can be versioned, published, synced to devices, and analyzed.</p>
+            <p>Editable projects that can be versioned, published, synced, and analyzed.</p>
         </div>
     </div>
 
@@ -153,7 +78,7 @@
                             </div>
                         </div>
                         <p class="project-description">
-                            {{ $form->moduleLabel() }} project for {{ $form->country?->name ?? $form->country_code }}. Publish controlled versions to mobile devices, keep reports offline-ready, and review clean JSON submissions when they sync.
+                            {{ $form->moduleLabel() }} project for {{ $form->country?->name ?? $form->country_code }}. Publish controlled versions and review synced JSON records.
                         </p>
                         <div class="project-meta-row">
                             <span class="tag">{{ $form->country?->name ?? $form->country_code }}</span>
@@ -174,8 +99,7 @@
                     <a class="tool-button primary" href="{{ route('admin.forms.show', $form) }}">Summary</a>
                     <a class="tool-button" href="{{ route('admin.forms.builder.edit', $form) }}">Form builder</a>
                     <a class="tool-button" href="{{ route('admin.submissions.index', ['country_code' => $form->country_code, 'form_id' => $form->form_id]) }}">Data</a>
-                    <a class="tool-button" href="{{ route('admin.dashboard.index') }}">Analysis</a>
-                    <a class="tool-button" href="{{ route('admin.users.index', ['country_code' => $form->country_code]) }}">Team</a>
+                    <a class="tool-button" href="{{ route('admin.map.index', ['country_code' => $form->country_code]) }}">Map</a>
                 </div>
             </article>
         @empty
@@ -195,4 +119,59 @@
     </div>
 
     {{ $forms->links() }}
+
+    <section id="template-library" class="panel" style="margin-top:22px;">
+        <div class="panel-head">
+            <div>
+                <h2 class="panel-title">Template Library</h2>
+                <p class="panel-subtitle">Copy a protected baseline, then adapt it in the form builder.</p>
+            </div>
+            <span class="tag">{{ number_format($templateForms->count()) }} templates</span>
+        </div>
+        <div class="template-grid template-grid-wide" style="padding:18px;">
+            @forelse($templateForms as $template)
+                @php
+                    $summaryData = $template->template_summary ?: [];
+                    $sections = collect($summaryData['sections'] ?? []);
+                    $sampleFields = $sections
+                        ->flatMap(fn ($section) => $section['fields'] ?? [])
+                        ->take(4)
+                        ->values();
+                @endphp
+                <article class="template-card template-card-detailed">
+                    <div class="template-card-head">
+                        <div>
+                            <span class="template-kicker">{{ $template->moduleLabel() }}</span>
+                            <h3>{{ $template->title }}</h3>
+                        </div>
+                        <span class="tag">{{ number_format((int) ($summaryData['field_count'] ?? 0)) }} fields</span>
+                    </div>
+                    <p>{{ $template->template_description ?: 'Standards-backed report template ready to copy into an operational project.' }}</p>
+                    <div class="template-standard">{{ $template->publishedVersion?->compiled_schema['standardReference'] ?? \App\Models\DynamicForm::standardReferenceForModule($template->reporting_module) }}</div>
+
+                    @if($sampleFields->isNotEmpty())
+                        <div class="template-field-chips" aria-label="Example fields">
+                            @foreach($sampleFields as $field)
+                                <span>{{ $field['label'] }}</span>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="template-actions">
+                        <form method="POST" action="{{ route('admin.forms.templates.clone', $template) }}">
+                            @csrf
+                            <input type="hidden" name="country_code" value="{{ $filters['country_code'] ?: $template->country_code }}">
+                            <button type="submit">Clone Template</button>
+                        </form>
+                        <a class="button light" href="{{ route('admin.forms.show', $template) }}">Preview</a>
+                    </div>
+                </article>
+            @empty
+                <div class="empty-state">
+                    <h3>No templates loaded</h3>
+                    <p>Run the template seeder to load the ICAO, WCO, WHO, and security starter templates.</p>
+                </div>
+            @endforelse
+        </div>
+    </section>
 @endsection

@@ -165,61 +165,71 @@
                     </label>
                 </div>
             </div>
-            <div class="data-toolbar">
+            <div class="data-toolbar builder-tabbar" role="tablist" aria-label="Form builder views">
                 <div class="toolbar-group">
-                    <span class="selected-count">{{ $includedRowCount }} configured fields</span>
-                    <button type="button" class="tool-button" data-open-question-library>Question library</button>
-                    <button type="button" class="tool-button" data-open-mobile-preview>Preview mobile flow</button>
+                    <button id="builder-tab-form-button" type="button" class="builder-tab is-active" data-builder-tab="form" role="tab" aria-selected="true" aria-controls="builder-tab-form">
+                        <span class="selected-count">{{ $includedRowCount }} configured fields</span>
+                    </button>
+                    <button id="builder-tab-library-button" type="button" class="builder-tab" data-builder-tab="library" role="tab" aria-selected="false" aria-controls="builder-tab-library">
+                        Question library
+                    </button>
+                    <button id="builder-tab-preview-button" type="button" class="builder-tab" data-builder-tab="preview" role="tab" aria-selected="false" aria-controls="builder-tab-preview">
+                        Preview mobile flow
+                    </button>
                 </div>
                 <div class="toolbar-group">
                     <span class="tag">Versioned publishing</span>
                 </div>
             </div>
 
-            <div id="question-library" class="question-library">
-                <div class="question-library-head">
-                    <div>
-                        <h3>Question Library</h3>
-                        <p>Skipped template questions stay here. Add one back, review it in the form, then save a new version.</p>
+            <div id="builder-tab-library" class="builder-tab-panel" data-builder-tab-panel="library" role="tabpanel" aria-labelledby="builder-tab-library-button" hidden>
+                <div id="question-library" class="question-library">
+                    <div class="question-library-head">
+                        <div>
+                            <h3>Question Library</h3>
+                            <p>Skipped template questions stay here. Add one back, review it in the form, then save a new version.</p>
+                        </div>
+                        <span class="tag" data-question-library-count>{{ $excludedRows->count() }} available</span>
                     </div>
-                    <span class="tag">{{ $excludedRows->count() }} available</span>
+                    @if($excludedRows->isNotEmpty())
+                        <div class="question-library-grid">
+                            @foreach($excludedRows as $item)
+                                @php
+                                    $libraryRow = $item['row'];
+                                    $libraryIndex = $item['index'];
+                                    $libraryType = $libraryRow['type'] ?? 'text';
+                                    $libraryLabel = trim((string) ($libraryRow['label'] ?? '')) ?: ($libraryRow['id'] ?? 'Question');
+                                @endphp
+                                <article class="question-library-card">
+                                    <div>
+                                        <span class="template-kicker">{{ $libraryType === 'note' ? 'Section' : 'Question' }}</span>
+                                        <strong>{{ $libraryLabel }}</strong>
+                                        <p>{{ $fieldPurpose($libraryRow) }}</p>
+                                    </div>
+                                    <button type="button" class="button light" data-add-builder-question="{{ $libraryIndex }}">Add back</button>
+                                </article>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="question-library-empty">All template questions are currently included in this form.</div>
+                    @endif
                 </div>
-                @if($excludedRows->isNotEmpty())
-                    <div class="question-library-grid">
-                        @foreach($excludedRows as $item)
-                            @php
-                                $libraryRow = $item['row'];
-                                $libraryIndex = $item['index'];
-                                $libraryType = $libraryRow['type'] ?? 'text';
-                                $libraryLabel = trim((string) ($libraryRow['label'] ?? '')) ?: ($libraryRow['id'] ?? 'Question');
-                            @endphp
-                            <article class="question-library-card">
-                                <div>
-                                    <span class="template-kicker">{{ $libraryType === 'note' ? 'Section' : 'Question' }}</span>
-                                    <strong>{{ $libraryLabel }}</strong>
-                                    <p>{{ $fieldPurpose($libraryRow) }}</p>
-                                </div>
-                                <button type="button" class="button light" data-add-builder-question="{{ $libraryIndex }}">Add back</button>
-                            </article>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="question-library-empty">All template questions are currently included in this form.</div>
-                @endif
             </div>
 
-            <div id="mobile-flow-preview" class="mobile-flow-preview" hidden>
-                <div class="question-library-head">
-                    <div>
-                        <h3>Mobile Flow Preview</h3>
-                        <p>Included questions appear here in the order officers will move through them on the mobile app.</p>
+            <div id="builder-tab-preview" class="builder-tab-panel" data-builder-tab-panel="preview" role="tabpanel" aria-labelledby="builder-tab-preview-button" hidden>
+                <div id="mobile-flow-preview" class="mobile-flow-preview">
+                    <div class="question-library-head">
+                        <div>
+                            <h3>Mobile Flow Preview</h3>
+                            <p>Included questions appear here in the order officers will move through them on the mobile app.</p>
+                        </div>
                     </div>
-                    <button type="button" class="button light" data-close-mobile-preview>Close preview</button>
+                    <div class="mobile-flow-preview-list" data-mobile-preview-list></div>
                 </div>
-                <div class="mobile-flow-preview-list" data-mobile-preview-list></div>
             </div>
 
-            <div class="builder-question-list">
+            <div id="builder-tab-form" class="builder-tab-panel" data-builder-tab-panel="form" role="tabpanel" aria-labelledby="builder-tab-form-button">
+                <div class="builder-question-list">
                 @foreach($rowsForDisplay as $index => $row)
                     @php
                         $hasFieldContent = trim((string) ($row['id'] ?? '')) !== ''
@@ -300,6 +310,7 @@
                         </div>
                     </article>
                 @endforeach
+                </div>
             </div>
         </div>
 
