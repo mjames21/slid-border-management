@@ -198,7 +198,11 @@
 
             async function loadMap() {
                 updateBoundaryLink();
+                document.getElementById('map-subtitle').textContent = 'Loading boundary and GPS reports...';
+                document.getElementById('map-point-status').textContent = 'Loading';
+                svg.innerHTML = '<text x="500" y="310" text-anchor="middle" fill="#64748b">Loading map...</text>';
                 const params = new URLSearchParams({
+                    view: 'map',
                     country_code: countrySelect.value,
                     hours: hoursSelect.value,
                     q: searchInput.value.trim(),
@@ -233,8 +237,9 @@
                 document.getElementById('map-missing-gps').textContent = metrics.withoutLocation ?? 0;
                 document.getElementById('map-boundary-status').textContent = data.country?.hasBoundary ? 'Boundary loaded' : 'No boundary uploaded';
                 document.getElementById('map-point-status').textContent = `${data.points?.length || 0} plotted`;
+                const simplifiedNote = data.boundaryMeta?.simplified ? ' Optimized for fast display.' : '';
                 document.getElementById('map-subtitle').textContent = data.country?.hasBoundary
-                    ? `${data.country.name} boundary with ${data.points.length} GPS report(s).`
+                    ? `${data.country.name} boundary with ${data.points.length} GPS report(s).${simplifiedNote}`
                     : 'No boundary uploaded yet. Use Map Boundary Configuration above to upload GeoJSON or a zipped shapefile.';
 
                 renderSvg(data);

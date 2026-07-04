@@ -17,10 +17,6 @@ class BuildFormRequest extends FormRequest
                     return false;
                 }
 
-                if (array_key_exists('include', $field) && empty($field['include'])) {
-                    return false;
-                }
-
                 return trim((string) ($field['id'] ?? '')) !== ''
                     || trim((string) ($field['label'] ?? '')) !== ''
                     || trim((string) ($field['hint'] ?? '')) !== ''

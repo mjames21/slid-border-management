@@ -14,6 +14,7 @@ class FrequentLocation extends Model
         'country_name',
         'name',
         'admin_area',
+        'district',
         'category',
         'aliases',
         'is_active',

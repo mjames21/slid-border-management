@@ -83,7 +83,7 @@ fun DynamicFormScreen(
     val currentStep = steps[safeStepIndex]
     val isFirstStep = safeStepIndex == 0
     val isLastStep = safeStepIndex == steps.lastIndex
-    val canScanMrz = form != null && (visibleFields.any { it.supportsMrzScan() } || visibleFields.isNotEmpty())
+    val canScanMrz = form != null && currentStep.fields.any { it.supportsMrzScan() }
     val progress = (safeStepIndex + 1).toFloat() / steps.size.toFloat()
 
     Column(
@@ -115,7 +115,7 @@ fun DynamicFormScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Step ${safeStepIndex + 1} of ${steps.size}",
+                    text = "Question ${safeStepIndex + 1} of ${steps.size}",
                     style = MaterialTheme.typography.labelMedium
                 )
                 LinearProgressIndicator(
@@ -416,44 +416,22 @@ private fun buildFormSteps(fields: List<RuntimeField>): List<FormStep> {
         return listOf(FormStep("Review", null, emptyList()))
     }
 
-    val hasSectionMarkers = fields.any { it.isSectionMarker() }
-    if (!hasSectionMarkers) {
-        return fields.chunked(4).mapIndexed { index, chunk ->
-            FormStep(
-                title = fallbackStepTitle(index, chunk),
-                description = null,
-                fields = chunk
-            )
-        }
-    }
-
     val steps = mutableListOf<FormStep>()
-    var currentTitle: String? = null
-    var currentDescription: String? = null
-    var currentFields = mutableListOf<RuntimeField>()
-
-    fun flushCurrent() {
-        if (currentFields.isEmpty()) return
-
-        steps += FormStep(
-            title = currentTitle ?: fallbackStepTitle(steps.size, currentFields),
-            description = currentDescription,
-            fields = currentFields.toList()
-        )
-        currentFields = mutableListOf()
-    }
+    var sectionTitle: String? = null
+    var sectionDescription: String? = null
 
     fields.forEach { field ->
         if (field.isSectionMarker()) {
-            flushCurrent()
-            currentTitle = field.label
-            currentDescription = field.hint
+            sectionTitle = field.label
+            sectionDescription = field.hint
         } else {
-            currentFields += field
+            steps += FormStep(
+                title = sectionTitle ?: fallbackStepTitle(steps.size, listOf(field)),
+                description = sectionDescription,
+                fields = listOf(field)
+            )
         }
     }
-
-    flushCurrent()
 
     return steps.ifEmpty { listOf(FormStep("Review", null, fields.filterNot { it.isSectionMarker() })) }
 }

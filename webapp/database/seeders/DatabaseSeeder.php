@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
+        $this->call(BorderOfficerSeeder::class);
+
         $admin = User::query()->updateOrCreate(['email' => 'admin@slid.local'], [
             'name' => 'SLID Admin',
             'password' => Hash::make(env('SEED_DEMO_ADMIN_PASSWORD', 'Password123!')),

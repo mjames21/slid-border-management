@@ -2,12 +2,23 @@
 
 @php
     $savedRows = old('fields', $rows);
+    $rowHasContent = function ($row): bool {
+        return trim((string) ($row['id'] ?? '')) !== ''
+            || trim((string) ($row['label'] ?? '')) !== ''
+            || trim((string) ($row['hint'] ?? '')) !== ''
+            || trim((string) ($row['options'] ?? '')) !== '';
+    };
+    $rowIsIncluded = function ($row) use ($rowHasContent): bool {
+        return array_key_exists('include', $row) ? (bool) $row['include'] : $rowHasContent($row);
+    };
     $rowsForDisplay = collect($savedRows)
         ->merge(array_fill(0, 5, ['id' => '', 'type' => 'text', 'label' => '', 'hint' => '', 'required' => false, 'options' => '']))
         ->values();
-    $includedRowCount = collect($savedRows)->filter(function ($row) {
-        return trim((string) ($row['id'] ?? '')) !== '' || trim((string) ($row['label'] ?? '')) !== '';
-    })->count();
+    $includedRowCount = collect($savedRows)->filter(fn ($row): bool => $rowHasContent($row) && $rowIsIncluded($row))->count();
+    $excludedRows = collect($savedRows)
+        ->map(fn ($row, $index): array => ['row' => $row, 'index' => $index])
+        ->filter(fn (array $item): bool => $rowHasContent($item['row']) && !$rowIsIncluded($item['row']))
+        ->values();
     $fieldPurpose = function (array $row): string {
         $hint = trim((string) ($row['hint'] ?? ''));
         if ($hint !== '') {
@@ -146,8 +157,8 @@
                     <p class="panel-subtitle">Keep the full template selected, or clear fields that do not apply to this border workflow.</p>
                 </div>
                 <div class="builder-controls">
-                    <button type="button" class="button light" onclick="document.querySelectorAll('.include-field').forEach((field) => field.checked = true)">Select All</button>
-                    <button type="button" class="button light" onclick="document.querySelectorAll('.include-field[data-required=&quot;0&quot;]').forEach((field) => field.checked = false)">Clear Optional</button>
+                    <button type="button" class="button light" data-builder-select-all>Select All</button>
+                    <button type="button" class="button light" data-builder-clear-optional>Clear Optional</button>
                     <label style="display: flex; align-items: center; gap: 8px; margin: 0;">
                         <input type="checkbox" name="publish" value="1" {{ old('publish') ? 'checked' : '' }}>
                         Publish now
@@ -157,12 +168,55 @@
             <div class="data-toolbar">
                 <div class="toolbar-group">
                     <span class="selected-count">{{ $includedRowCount }} configured fields</span>
-                    <button type="button" class="tool-button">Question library</button>
-                    <button type="button" class="tool-button">Preview mobile flow</button>
+                    <button type="button" class="tool-button" data-open-question-library>Question library</button>
+                    <button type="button" class="tool-button" data-open-mobile-preview>Preview mobile flow</button>
                 </div>
                 <div class="toolbar-group">
                     <span class="tag">Versioned publishing</span>
                 </div>
+            </div>
+
+            <div id="question-library" class="question-library">
+                <div class="question-library-head">
+                    <div>
+                        <h3>Question Library</h3>
+                        <p>Skipped template questions stay here. Add one back, review it in the form, then save a new version.</p>
+                    </div>
+                    <span class="tag">{{ $excludedRows->count() }} available</span>
+                </div>
+                @if($excludedRows->isNotEmpty())
+                    <div class="question-library-grid">
+                        @foreach($excludedRows as $item)
+                            @php
+                                $libraryRow = $item['row'];
+                                $libraryIndex = $item['index'];
+                                $libraryType = $libraryRow['type'] ?? 'text';
+                                $libraryLabel = trim((string) ($libraryRow['label'] ?? '')) ?: ($libraryRow['id'] ?? 'Question');
+                            @endphp
+                            <article class="question-library-card">
+                                <div>
+                                    <span class="template-kicker">{{ $libraryType === 'note' ? 'Section' : 'Question' }}</span>
+                                    <strong>{{ $libraryLabel }}</strong>
+                                    <p>{{ $fieldPurpose($libraryRow) }}</p>
+                                </div>
+                                <button type="button" class="button light" data-add-builder-question="{{ $libraryIndex }}">Add back</button>
+                            </article>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="question-library-empty">All template questions are currently included in this form.</div>
+                @endif
+            </div>
+
+            <div id="mobile-flow-preview" class="mobile-flow-preview" hidden>
+                <div class="question-library-head">
+                    <div>
+                        <h3>Mobile Flow Preview</h3>
+                        <p>Included questions appear here in the order officers will move through them on the mobile app.</p>
+                    </div>
+                    <button type="button" class="button light" data-close-mobile-preview>Close preview</button>
+                </div>
+                <div class="mobile-flow-preview-list" data-mobile-preview-list></div>
             </div>
 
             <div class="builder-question-list">
@@ -177,7 +231,7 @@
                         $rowLabel = trim((string) ($row['label'] ?? '')) ?: 'New Question';
                         $purpose = $fieldPurpose($row);
                     @endphp
-                    <article class="builder-question-card {{ $rowType === 'note' ? 'builder-section-card' : '' }}">
+                    <article id="builder-question-{{ $index }}" class="builder-question-card {{ $rowType === 'note' ? 'builder-section-card' : '' }} {{ !$included && $hasFieldContent ? 'builder-question-excluded' : '' }}">
                         <div class="builder-question-main">
                             <div class="builder-question-include">
                                 <input type="hidden" name="fields[{{ $index }}][include]" value="0">

@@ -18,21 +18,21 @@
 
     <div class="card">
         <h2 class="title" style="font-size: 20px;">Upload Location List</h2>
-        <p class="subtitle">Accepted formats: CSV, XLS, XLSX. Required columns: country and name. Optional columns: admin_area, category, aliases, sort_order.</p>
+        <p class="subtitle">Accepted formats: CSV, XLS, XLSX. Required columns: country and name. Optional columns: district, admin_area, category, aliases, sort_order.</p>
         <form method="POST" action="{{ route('admin.locations.store') }}" enctype="multipart/form-data" style="margin-top: 16px;">
             @csrf
             <div class="grid">
                 <div>
                     <label for="file">Location file</label>
                     <input id="file" type="file" name="file" required>
-                    <div class="field-help">Country can be SLE, Sierra Leone, GIN, Guinea, Guinea Conakry, LBR, or Liberia.</div>
+                    <div class="field-help">Country can be SLE, Sierra Leone, GIN, Guinea, Guinea Conakry, LBR, or Liberia. District ties choices to the officer's assigned border post.</div>
                 </div>
                 <div>
                     <label>Sample CSV columns</label>
-                    <div class="mono">country,name,admin_area,category,aliases,sort_order
-SLE,Kambia,Kambia,town,,10
-GIN,Pamelap,Forecariah,border town,,20
-LBR,Bo Waterside,Grand Cape Mount,border town,,30</div>
+                    <div class="mono">country,name,district,admin_area,category,aliases,sort_order
+SLE,Kambia,Kambia,Kambia / Guinea corridor,town,,10
+GIN,Pamelap,Kambia,Kambia / Guinea corridor,border town,,20
+LBR,Foya,Kailahun,Kailahun / Liberia corridor,border town,,30</div>
                 </div>
             </div>
             <div class="actions" style="margin-top: 16px;">
@@ -81,6 +81,7 @@ LBR,Bo Waterside,Grand Cape Mount,border town,,30</div>
             <tr>
                 <th>Country</th>
                 <th>Location</th>
+                <th>District</th>
                 <th>Admin Area</th>
                 <th>Category</th>
                 <th>Status</th>
@@ -91,12 +92,13 @@ LBR,Bo Waterside,Grand Cape Mount,border town,,30</div>
                 <tr>
                     <td class="mono">{{ $location->country_code }}</td>
                     <td>{{ $location->name }}</td>
+                    <td>{{ $location->district }}</td>
                     <td>{{ $location->admin_area }}</td>
                     <td>{{ $location->category }}</td>
                     <td>{{ $location->is_active ? 'Active' : 'Inactive' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5">No frequent locations have been uploaded yet.</td></tr>
+                <tr><td colspan="6">No frequent locations have been uploaded yet.</td></tr>
             @endforelse
             </tbody>
         </table>

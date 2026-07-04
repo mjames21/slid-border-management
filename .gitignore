@@ -1,0 +1,5 @@
+.DS_Store
+docs/.DS_Store
+reporting_app/.gradle-home/
+tmp/
+webapp/tmp/

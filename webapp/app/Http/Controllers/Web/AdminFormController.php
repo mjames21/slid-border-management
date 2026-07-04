@@ -107,7 +107,7 @@ class AdminFormController extends Controller
         return view('admin.forms.builder', [
             'form' => $form,
             'fieldTypes' => $builder->fieldTypes(),
-            'rows' => $version ? $builder->builderRowsFromSchema($version->compiled_schema) : $templates->get(null)['fields'],
+            'rows' => $version ? $this->builderRowsForEdit($form, $version, $builder, $templates) : $templates->get(null)['fields'],
             'templates' => $templates->all(),
             'selectedTemplate' => null,
             'standardReference' => $version?->compiled_schema['standardReference'] ?? DynamicForm::standardReferenceForModule($form->reporting_module),
@@ -361,6 +361,84 @@ class AdminFormController extends Controller
 
             return $form;
         });
+    }
+
+    private function builderRowsForEdit(
+        DynamicForm $form,
+        DynamicFormVersion $version,
+        FormBuilderCompiler $builder,
+        FormTemplateLibrary $templates
+    ): array {
+        $savedRows = $version->source_metadata['builderRows'] ?? null;
+        if (is_array($savedRows) && $savedRows !== []) {
+            return $savedRows;
+        }
+
+        $currentRows = $builder->builderRowsFromSchema($version->compiled_schema);
+        $template = $this->templateForFormVersion($form, $version, $templates);
+
+        if (!$template) {
+            return $currentRows;
+        }
+
+        return $this->mergeTemplateRowsWithCurrent($template['fields'], $currentRows);
+    }
+
+    private function templateForFormVersion(DynamicForm $form, DynamicFormVersion $version, FormTemplateLibrary $templates): ?array
+    {
+        $metadata = $version->source_metadata ?? [];
+        $templateKey = (string) ($metadata['template_key'] ?? '');
+        $templateFormId = (string) ($metadata['template_form_id'] ?? '');
+
+        foreach ($templates->all() as $key => $template) {
+            if ($templateKey !== '' && $key === $templateKey) {
+                return $template;
+            }
+
+            if ($templateFormId !== '' && ($template['form_id'] ?? '') === $templateFormId) {
+                return $template;
+            }
+
+            if (($template['form_id'] ?? '') === $form->form_id) {
+                return $template;
+            }
+
+            if (($template['reporting_module'] ?? '') === $form->reporting_module
+                && ($template['standard_reference'] ?? '') === ($version->compiled_schema['standardReference'] ?? null)
+                && ($template['title'] ?? '') === $form->title) {
+                return $template;
+            }
+        }
+
+        return null;
+    }
+
+    private function mergeTemplateRowsWithCurrent(array $templateRows, array $currentRows): array
+    {
+        $currentById = collect($currentRows)
+            ->filter(fn (array $row): bool => trim((string) ($row['id'] ?? '')) !== '')
+            ->keyBy(fn (array $row): string => (string) $row['id']);
+
+        $templateIds = [];
+        $merged = collect($templateRows)
+            ->map(function (array $templateRow) use ($currentById, &$templateIds): array {
+                $id = (string) ($templateRow['id'] ?? '');
+                $templateIds[] = $id;
+
+                if ($id !== '' && $currentById->has($id)) {
+                    return array_merge($templateRow, $currentById->get($id), ['include' => true]);
+                }
+
+                return array_merge($templateRow, ['include' => false]);
+            })
+            ->values();
+
+        $customRows = collect($currentRows)
+            ->filter(fn (array $row): bool => !in_array((string) ($row['id'] ?? ''), $templateIds, true))
+            ->map(fn (array $row): array => array_merge($row, ['include' => true]))
+            ->values();
+
+        return $merged->merge($customRows)->values()->all();
     }
 
     private function selectedCountryCode(Request $request): ?string

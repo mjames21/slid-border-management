@@ -87,6 +87,7 @@ class FormBuilderCompiler
             ],
             'metadata' => [
                 'source' => 'form_builder',
+                'builderRows' => array_values($input['fields'] ?? []),
                 'warnings' => $warnings,
                 'ignoredRows' => [],
                 'unsupportedRows' => [],
@@ -108,6 +109,7 @@ class FormBuilderCompiler
                     ->implode("\n");
 
                 return [
+                    'include' => true,
                     'id' => $field['id'] ?? '',
                     'type' => $field['type'] ?? 'text',
                     'label' => $field['label'] ?? '',

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\BorderPost;
 use App\Models\User;
+use Database\Seeders\BorderOfficerSeeder;
 use Database\Seeders\BorderPostSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -43,5 +44,40 @@ class BorderPostSeederTest extends TestCase
         $officer->refresh();
 
         $this->assertSame('BEN-LND', $officer->borderPost?->code);
+    }
+
+    public function test_border_officer_seeder_creates_one_login_for_each_active_border_post(): void
+    {
+        $this->seed(BorderPostSeeder::class);
+        $this->seed(BorderOfficerSeeder::class);
+        $this->seed(BorderOfficerSeeder::class);
+
+        $activePostIds = BorderPost::query()->where('is_active', true)->pluck('id');
+
+        $this->assertCount(13, $activePostIds);
+        $this->assertSame(
+            13,
+            User::query()
+                ->where('role', 'border_officer')
+                ->whereIn('border_post_id', $activePostIds)
+                ->count()
+        );
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'ben-lnd.officer@slid.local',
+            'name' => 'Bendu Border Officer',
+            'country_code' => 'SLE',
+            'border_post_id' => BorderPost::query()->where('code', 'BEN-LND')->value('id'),
+            'role' => 'border_officer',
+            'is_admin' => false,
+            'is_active' => true,
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'gbm-lnd.officer@slid.local',
+            'name' => 'Gbalamuya Border Officer',
+            'country_code' => 'SLE',
+            'border_post_id' => BorderPost::query()->where('code', 'GBM-LND')->value('id'),
+        ]);
     }
 }

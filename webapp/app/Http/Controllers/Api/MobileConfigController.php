@@ -28,8 +28,8 @@ class MobileConfigController extends Controller
                 ->where('is_template', false))
             ->latest('updated_at')
             ->get()
-            ->map(function (DynamicFormVersion $version) use ($locations): array {
-                $schema = $locations->hydrateSchema($version->compiled_schema);
+            ->map(function (DynamicFormVersion $version) use ($locations, $user): array {
+                $schema = $locations->hydrateSchema($version->compiled_schema, $user?->borderPost);
                 $schema['reportingModule'] = DynamicForm::normalizeModule(
                     $version->form?->reporting_module ?? ($schema['reportingModule'] ?? null)
                 );

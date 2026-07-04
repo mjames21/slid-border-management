@@ -238,6 +238,52 @@ class FormBuilderTest extends TestCase
 
         $this->assertContains('document_number', $fieldIds);
         $this->assertNotContains('chip_authentication_result', $fieldIds);
+
+        $metadataRows = DynamicForm::query()
+            ->where('form_id', 'selective.doc9303.form')
+            ->firstOrFail()
+            ->publishedVersion
+            ->source_metadata['builderRows'];
+
+        $this->assertTrue(collect($metadataRows)->contains(fn (array $row): bool => ($row['id'] ?? '') === 'chip_authentication_result' && ($row['include'] ?? null) === '0'));
+    }
+
+    public function test_edit_builder_keeps_skipped_questions_available_in_question_library(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+
+        $this->actingAs($admin)->post('/admin/forms/builder', [
+            'form_id' => 'restore.template.question',
+            'reporting_module' => DynamicForm::MODULE_IMMIGRATION,
+            'title' => 'Restore Template Question',
+            'fields' => [
+                [
+                    'include' => '1',
+                    'id' => 'document_number',
+                    'type' => 'text',
+                    'label' => 'Document Number',
+                    'required' => '1',
+                ],
+                [
+                    'include' => '0',
+                    'id' => 'chip_authentication_result',
+                    'type' => 'select_one',
+                    'label' => 'Chip Authentication Result',
+                    'options' => "passed|Passed\nfailed|Failed",
+                ],
+            ],
+        ])->assertRedirect();
+
+        $form = DynamicForm::query()->where('form_id', 'restore.template.question')->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.forms.builder.edit', $form))
+            ->assertOk()
+            ->assertSee('Question Library')
+            ->assertSee('Chip Authentication Result')
+            ->assertSee('Add back');
+
+        $response->assertSee('name="fields[1][include]" value="0"', false);
     }
 
     public function test_editing_builder_form_creates_next_draft_version_without_changing_form_id(): void

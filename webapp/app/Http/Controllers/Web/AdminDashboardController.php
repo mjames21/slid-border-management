@@ -12,11 +12,13 @@ use App\Services\CountryBoundaryImporter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
 {
     private const DEFAULT_LAYOUT = ['map', 'timeline', 'breakdowns', 'quality', 'discover', 'devices', 'detail', 'reports', 'aggregates'];
+    private const MAX_MAP_BOUNDARY_COORDINATES = 12000;
 
     public function index(Request $request): View
     {
@@ -35,37 +37,42 @@ class AdminDashboardController extends Controller
         $hours = max(1, min(168, (int) $request->query('hours', 24)));
         $filters = $this->normalizeFilters($request->query('filters', []));
         $search = substr(trim((string) $request->query('q', '')), 0, 120);
+        $mapOnly = $request->query('view') === 'map';
 
         $baseQuery = $this->filteredSubmissionQuery($country?->code, now()->subHours($hours), $filters);
         $this->applyDiscoverSearch($baseQuery, $search);
         $total = (clone $baseQuery)->count();
         $withLocation = (clone $baseQuery)->whereNotNull('device_latitude')->whereNotNull('device_longitude')->count();
-        $analysisRows = (clone $baseQuery)
-            ->latest('received_at')
-            ->limit(5000)
-            ->get([
-                'id',
-                'country_code',
-                'border_post_code',
-                'border_post_digital_address',
-                'region',
-                'reporting_module',
-                'device_latitude',
-                'device_longitude',
-                'device_location_accuracy_meters',
-                'device_location_captured_at',
-                'form_id',
-                'form_version',
-                'device_id',
-                'local_id',
-                'status',
-                'answers',
-                'client_created_at',
-                'received_at',
-                'client_synced_at',
-                'rejection_reason',
-                'server_uid',
-            ]);
+        $analysisRows = collect();
+
+        if (!$mapOnly) {
+            $analysisRows = (clone $baseQuery)
+                ->latest('received_at')
+                ->limit(5000)
+                ->get([
+                    'id',
+                    'country_code',
+                    'border_post_code',
+                    'border_post_digital_address',
+                    'region',
+                    'reporting_module',
+                    'device_latitude',
+                    'device_longitude',
+                    'device_location_accuracy_meters',
+                    'device_location_captured_at',
+                    'form_id',
+                    'form_version',
+                    'device_id',
+                    'local_id',
+                    'status',
+                    'answers',
+                    'client_created_at',
+                    'received_at',
+                    'client_synced_at',
+                    'rejection_reason',
+                    'server_uid',
+                ]);
+        }
 
         $points = (clone $baseQuery)
             ->whereNotNull('device_latitude')
@@ -76,13 +83,14 @@ class AdminDashboardController extends Controller
             ->map(fn (MobileSubmission $submission) => $this->serializeSubmission($submission))
             ->values();
 
-        $latestReports = $analysisRows
-            ->take(200)
-            ->map(fn (MobileSubmission $submission) => $this->serializeSubmission($submission))
-            ->values();
+        $latestReports = $mapOnly
+            ? $points->take(80)->values()
+            : $analysisRows
+                ->take(200)
+                ->map(fn (MobileSubmission $submission) => $this->serializeSubmission($submission))
+                ->values();
 
-        $boundary = $boundaries->readBoundary($country);
-        [$mapBoundary, $boundaryCoordinateCount] = $this->mapBoundary($boundary);
+        [$mapBoundary, $boundaryCoordinateCount, $boundarySimplified] = $this->cachedMapBoundary($country, $boundaries);
 
         return response()->json([
             'generatedAt' => now()->toIso8601String(),
@@ -99,7 +107,8 @@ class AdminDashboardController extends Controller
             'boundary' => $mapBoundary,
             'boundaryMeta' => [
                 'coordinateCount' => $boundaryCoordinateCount,
-                'simplified' => $mapBoundary !== $boundary,
+                'simplified' => $boundarySimplified,
+                'maxCoordinates' => self::MAX_MAP_BOUNDARY_COORDINATES,
             ],
             'metrics' => [
                 'total' => $total,
@@ -111,13 +120,13 @@ class AdminDashboardController extends Controller
                 'rejected' => (clone $baseQuery)->where('status', '!=', 'accepted')->count(),
                 'uniqueDevices' => (clone $baseQuery)->whereNotNull('device_id')->distinct('device_id')->count('device_id'),
             ],
-            'aggregates' => [
+            'aggregates' => $mapOnly ? [] : [
                 'byBorderPost' => $this->aggregate($baseQuery, 'border_post_code'),
                 'byForm' => $this->aggregate($baseQuery, 'form_id'),
                 'byRegion' => $this->aggregate($baseQuery, 'region'),
                 'byModule' => $this->aggregateModules($baseQuery),
             ],
-            'analysis' => $this->analysisPayload($analysisRows, $hours),
+            'analysis' => $mapOnly ? [] : $this->analysisPayload($analysisRows, $hours),
             'points' => $points,
             'latestReports' => $latestReports,
         ]);
@@ -316,22 +325,40 @@ class AdminDashboardController extends Controller
         ];
     }
 
+    private function cachedMapBoundary(?Country $country, CountryBoundaryImporter $boundaries): array
+    {
+        if (!$country?->boundary_geojson_path) {
+            return [null, 0, false];
+        }
+
+        $cacheKey = implode(':', [
+            'map-boundary',
+            $country->code,
+            sha1((string) $country->boundary_geojson_path),
+            optional($country->updated_at)->timestamp,
+            self::MAX_MAP_BOUNDARY_COORDINATES,
+        ]);
+
+        return Cache::remember($cacheKey, now()->addHour(), function () use ($country, $boundaries): array {
+            return $this->mapBoundary($boundaries->readBoundary($country));
+        });
+    }
+
     private function mapBoundary(?array $boundary): array
     {
         if (!$boundary) {
-            return [null, 0];
+            return [null, 0, false];
         }
 
         $coordinateCount = $this->boundaryCoordinateCount($boundary);
-        $maxMapCoordinates = 40000;
 
-        if ($coordinateCount <= $maxMapCoordinates) {
-            return [$boundary, $coordinateCount];
+        if ($coordinateCount <= self::MAX_MAP_BOUNDARY_COORDINATES) {
+            return [$boundary, $coordinateCount, false];
         }
 
-        $stride = (int) ceil($coordinateCount / $maxMapCoordinates);
+        $stride = (int) ceil($coordinateCount / self::MAX_MAP_BOUNDARY_COORDINATES);
 
-        return [$this->simplifyBoundaryNode($boundary, $stride), $coordinateCount];
+        return [$this->simplifyBoundaryNode($boundary, $stride), $coordinateCount, true];
     }
 
     private function boundaryCoordinateCount(?array $node): int

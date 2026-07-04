@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BorderPost;
 use App\Models\FrequentLocation;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -31,7 +32,7 @@ class LocationOptionCatalog
         return array_key_exists($source ?: self::MANUAL_SOURCE, $this->sourceLabels());
     }
 
-    public function optionsFor(?string $source): array
+    public function optionsFor(?string $source, ?BorderPost $borderPost = null): array
     {
         $source = $source ?: self::MANUAL_SOURCE;
         if ($source === self::MANUAL_SOURCE) {
@@ -49,6 +50,17 @@ class LocationOptionCatalog
             $query->where('country_code', $countryCode);
         }
 
+        $district = $this->districtFromBorderPost($borderPost);
+        if ($district) {
+            $query->where(function ($query) use ($district): void {
+                $query
+                    ->where('district', $district)
+                    ->orWhere('admin_area', $district)
+                    ->orWhere('admin_area', 'like', $this->likeValue($district.' /'))
+                    ->orWhere('admin_area', 'like', $this->likeValue('/ '.$district));
+            });
+        }
+
         return $query->get()
             ->map(fn (FrequentLocation $location): array => [
                 'value' => $this->optionValue($location),
@@ -58,17 +70,17 @@ class LocationOptionCatalog
             ->all();
     }
 
-    public function hydrateSchema(array $schema): array
+    public function hydrateSchema(array $schema, ?BorderPost $borderPost = null): array
     {
         $choiceLists = $schema['choiceLists'] ?? [];
         $fields = collect($schema['fields'] ?? [])
-            ->map(function (array $field) use (&$choiceLists): array {
+            ->map(function (array $field) use (&$choiceLists, $borderPost): array {
                 $source = $field['optionSource'] ?? null;
                 if (!$source || !str_starts_with($source, 'locations:')) {
                     return $field;
                 }
 
-                $options = $this->optionsFor($source);
+                $options = $this->optionsFor($source, $borderPost);
                 $field['options'] = $options;
 
                 $listName = $field['listName'] ?? $field['id'].'_options';
@@ -122,6 +134,8 @@ class LocationOptionCatalog
 
             $location->fill([
                 'country_name' => self::COUNTRY_NAMES[$countryCode],
+                'district' => $this->nullableString($data['district'] ?? null)
+                    ?: $this->inferDistrict($data['admin_area'] ?? $data['area'] ?? null),
                 'category' => $this->nullableString($data['category'] ?? $data['type'] ?? null),
                 'aliases' => $this->nullableString($data['aliases'] ?? $data['alias'] ?? null),
                 'is_active' => true,
@@ -173,6 +187,40 @@ class LocationOptionCatalog
         $area = $location->admin_area ? ', '.$location->admin_area : '';
 
         return "{$location->name}{$area} ({$location->country_code})";
+    }
+
+    private function districtFromBorderPost(?BorderPost $borderPost): ?string
+    {
+        if (!$borderPost) {
+            return null;
+        }
+
+        $region = trim((string) $borderPost->region);
+        if ($region !== '') {
+            $district = trim(strtok($region, '/') ?: $region);
+            if ($district !== '') {
+                return $district;
+            }
+        }
+
+        return $this->inferDistrict($borderPost->name);
+    }
+
+    private function inferDistrict(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        $district = trim(strtok($value, '/') ?: $value);
+
+        return $district === '' ? null : $district;
+    }
+
+    private function likeValue(string $value): string
+    {
+        return '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value).'%';
     }
 
     private function headersFromRow(array $row): array
