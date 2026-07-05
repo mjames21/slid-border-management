@@ -16,8 +16,8 @@ use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(SecurityHeaders::class)->group(function () {
-    Route::get('/', fn () => view('welcome'))->name('welcome');
-    Route::get('/get-started', fn () => view('get-started'))->name('get-started');
+    Route::get('/', fn () => config('borderreach.platform_mode') ? view('welcome') : redirect()->route('login'))->name('welcome');
+    Route::get('/get-started', fn () => config('borderreach.platform_mode') ? view('get-started') : redirect()->route('login'))->name('get-started');
     Route::post('/deployment-requests', [DeploymentRequestController::class, 'store'])
         ->middleware('throttle:5,1')
         ->name('deployment-requests.store');

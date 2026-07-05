@@ -10,6 +10,8 @@ class StoreDeploymentRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        abort_unless(config('borderreach.platform_mode'), 404);
+
         return true;
     }
 

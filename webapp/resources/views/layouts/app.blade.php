@@ -46,7 +46,9 @@
                         <a href="{{ route('admin.border-posts.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.border-posts.*') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-100' }}">Border Posts</a>
                         <a href="{{ route('admin.locations.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.locations.*') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-100' }}">Locations</a>
                         <div class="px-3 pb-2 pt-5 text-xs font-bold uppercase tracking-wide text-slate-400">Administration</div>
-                        <a href="{{ route('admin.deployment-requests.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.deployment-requests.*') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-100' }}">Deployment Requests</a>
+                        @if(auth()->user()?->canManageDeploymentRequests())
+                            <a href="{{ route('admin.deployment-requests.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.deployment-requests.*') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-100' }}">Deployment Requests</a>
+                        @endif
                         <a href="{{ route('admin.users.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('admin.users.*') ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700 hover:bg-slate-100' }}">Users</a>
                     @else
                         <div class="px-3 pb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Operations</div>

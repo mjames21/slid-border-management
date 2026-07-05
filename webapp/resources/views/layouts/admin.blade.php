@@ -41,7 +41,11 @@
         ->implode('');
 
     if ($showAdminShell && \Illuminate\Support\Facades\Schema::hasTable('dynamic_forms')) {
-        $shellCountryFilter = request('country_code');
+        $requestedShellCountry = strtoupper(trim((string) request('country_code')));
+        $shellCountryFilter = $currentUser?->canManageAllTenants()
+            ? ($requestedShellCountry !== '' ? $requestedShellCountry : null)
+            : ($currentUser?->tenantCountryCode() ?: '__none__');
+
         $shellProjectQuery = \App\Models\DynamicForm::query()
             ->when(\Illuminate\Support\Facades\Schema::hasColumn('dynamic_forms', 'is_template'), fn ($query) => $query->where('is_template', false))
             ->when($shellCountryFilter, fn ($query, $countryCode) => $query->where('country_code', $countryCode));

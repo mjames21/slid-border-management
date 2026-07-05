@@ -12,6 +12,8 @@ class DeploymentRequestController extends Controller
 {
     public function store(StoreDeploymentRequest $request, AuditLogger $audit): RedirectResponse
     {
+        abort_unless(config('borderreach.platform_mode'), 404);
+
         $redirectTo = $this->redirectTarget($request);
 
         if ($request->filled('website')) {

@@ -20,7 +20,7 @@ class BorderOfficerSeeder extends Seeder
      */
     public function run(): void
     {
-        $password = Hash::make(env('SEED_BORDER_OFFICER_PASSWORD', 'Officer123!'));
+        $password = Hash::make((string) config('borderreach.seed.border_officer_password'));
 
         BorderPost::query()
             ->where('is_active', true)

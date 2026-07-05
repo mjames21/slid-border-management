@@ -19,9 +19,16 @@ class DatabaseSeeder extends Seeder
         $this->call(BorderPostSeeder::class);
         $this->call(FormTemplateSeeder::class);
 
+        $tenantCountryCode = (string) config('borderreach.tenant_country_code', 'SLE');
         $borderPost = BorderPost::query()
+            ->where('country_code', $tenantCountryCode)
             ->where('code', 'BEN-LND')
-            ->firstOrFail();
+            ->first()
+            ?: BorderPost::query()
+                ->where('country_code', $tenantCountryCode)
+                ->where('is_active', true)
+                ->orderBy('code')
+                ->first();
 
         // Demo credentials are useful locally, but production users must be
         // provisioned intentionally through php artisan admin:create-user.
@@ -31,22 +38,26 @@ class DatabaseSeeder extends Seeder
 
         $this->call(BorderOfficerSeeder::class);
 
-        $admin = User::query()->updateOrCreate(['email' => 'admin@slid.local'], [
-            'name' => 'SLID Admin',
-            'password' => Hash::make(env('SEED_DEMO_ADMIN_PASSWORD', 'Password123!')),
-            'country_code' => 'SLE',
+        $admin = User::query()->updateOrCreate(['email' => (string) config('borderreach.seed.admin_email')], [
+            'name' => (string) config('borderreach.seed.admin_name'),
+            'password' => Hash::make((string) config('borderreach.seed.admin_password')),
+            'country_code' => $tenantCountryCode,
             'border_post_id' => null,
-            'role' => User::ROLE_PLATFORM_ADMIN,
+            'role' => config('borderreach.platform_mode') ? User::ROLE_PLATFORM_ADMIN : User::ROLE_HQ_ADMIN,
             'is_admin' => true,
             'is_active' => true,
         ]);
 
         $this->ensurePersonalTeam($admin);
 
-        $officer = User::query()->updateOrCreate(['email' => 'officer@slid.local'], [
-            'name' => 'Bendu Border Officer',
-            'password' => Hash::make(env('SEED_DEMO_OFFICER_PASSWORD', 'Officer123!')),
-            'country_code' => 'SLE',
+        if (! $borderPost) {
+            return;
+        }
+
+        $officer = User::query()->updateOrCreate(['email' => (string) config('borderreach.seed.demo_officer_email')], [
+            'name' => "{$borderPost->name} Border Officer",
+            'password' => Hash::make((string) config('borderreach.seed.demo_officer_password')),
+            'country_code' => $tenantCountryCode,
             'border_post_id' => $borderPost->id,
             'role' => User::ROLE_BORDER_OFFICER,
             'is_admin' => false,

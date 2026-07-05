@@ -116,7 +116,9 @@ class User extends Authenticatable
 
     public function isPlatformAdmin(): bool
     {
-        return $this->is_admin && $this->role === self::ROLE_PLATFORM_ADMIN;
+        return (bool) config('borderreach.platform_mode')
+            && $this->is_admin
+            && ($this->role === self::ROLE_PLATFORM_ADMIN || $this->role === null || $this->role === '');
     }
 
     public function canManageAllTenants(): bool
@@ -149,6 +151,6 @@ class User extends Authenticatable
 
     public function operationalCountryCode(): string
     {
-        return $this->tenantCountryCode() ?: 'SLE';
+        return $this->tenantCountryCode() ?: (string) config('borderreach.tenant_country_code', 'SLE');
     }
 }

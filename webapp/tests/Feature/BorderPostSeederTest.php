@@ -26,7 +26,7 @@ class BorderPostSeederTest extends TestCase
         $this->seed(BorderPostSeeder::class);
         $this->seed(BorderPostSeeder::class);
 
-        $this->assertDatabaseCount('border_posts', 13);
+        $this->assertDatabaseCount('border_posts', 16);
         $this->assertDatabaseMissing('border_posts', ['code' => 'FAL_FALABA']);
         $this->assertDatabaseHas('border_posts', [
             'code' => 'SBY-SEA',
@@ -38,6 +38,24 @@ class BorderPostSeederTest extends TestCase
             'code' => 'GBM-LND',
             'name' => 'Gbalamuya',
             'region' => 'Kambia / NORTH_WEST - North West Province',
+            'is_active' => true,
+        ]);
+        $this->assertDatabaseHas('border_posts', [
+            'code' => 'FAL-LND',
+            'name' => 'Falaba',
+            'region' => 'Falaba / NORTH - Northern Province',
+            'is_active' => true,
+        ]);
+        $this->assertDatabaseHas('border_posts', [
+            'code' => 'KNU-LND',
+            'name' => 'Koinukura',
+            'region' => 'Falaba / NORTH - Northern Province',
+            'is_active' => true,
+        ]);
+        $this->assertDatabaseHas('border_posts', [
+            'code' => 'YEN-LND',
+            'name' => 'Yenga',
+            'region' => 'Kailahun / EAST - Eastern Province',
             'is_active' => true,
         ]);
 
@@ -54,9 +72,9 @@ class BorderPostSeederTest extends TestCase
 
         $activePostIds = BorderPost::query()->where('is_active', true)->pluck('id');
 
-        $this->assertCount(13, $activePostIds);
+        $this->assertCount(16, $activePostIds);
         $this->assertSame(
-            13,
+            16,
             User::query()
                 ->where('role', 'border_officer')
                 ->whereIn('border_post_id', $activePostIds)
@@ -78,6 +96,27 @@ class BorderPostSeederTest extends TestCase
             'name' => 'Gbalamuya Border Officer',
             'country_code' => 'SLE',
             'border_post_id' => BorderPost::query()->where('code', 'GBM-LND')->value('id'),
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'fal-lnd.officer@slid.local',
+            'name' => 'Falaba Border Officer',
+            'country_code' => 'SLE',
+            'border_post_id' => BorderPost::query()->where('code', 'FAL-LND')->value('id'),
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'knu-lnd.officer@slid.local',
+            'name' => 'Koinukura Border Officer',
+            'country_code' => 'SLE',
+            'border_post_id' => BorderPost::query()->where('code', 'KNU-LND')->value('id'),
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'yen-lnd.officer@slid.local',
+            'name' => 'Yenga Border Officer',
+            'country_code' => 'SLE',
+            'border_post_id' => BorderPost::query()->where('code', 'YEN-LND')->value('id'),
         ]);
     }
 }
