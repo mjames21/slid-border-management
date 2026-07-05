@@ -36,7 +36,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make(env('SEED_DEMO_ADMIN_PASSWORD', 'Password123!')),
             'country_code' => 'SLE',
             'border_post_id' => null,
-            'role' => 'hq_admin',
+            'role' => User::ROLE_PLATFORM_ADMIN,
             'is_admin' => true,
             'is_active' => true,
         ]);
@@ -48,7 +48,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make(env('SEED_DEMO_OFFICER_PASSWORD', 'Officer123!')),
             'country_code' => 'SLE',
             'border_post_id' => $borderPost->id,
-            'role' => 'border_officer',
+            'role' => User::ROLE_BORDER_OFFICER,
             'is_admin' => false,
             'is_active' => true,
         ]);

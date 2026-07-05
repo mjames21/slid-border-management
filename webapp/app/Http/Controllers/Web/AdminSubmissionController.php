@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\DynamicForm;
@@ -16,6 +17,8 @@ use Illuminate\View\View;
 
 class AdminSubmissionController extends Controller
 {
+    use ResolvesTenantScope;
+
     public function index(Request $request): View
     {
         $submissions = $this->filteredQuery($request)->latest('received_at')->paginate(25)->withQueryString();
@@ -23,14 +26,18 @@ class AdminSubmissionController extends Controller
         return view('admin.submissions.index', [
             'submissions' => $submissions,
             'answerColumns' => $this->answerColumns($submissions->getCollection()),
-            'filters' => $request->only(['country_code', 'reporting_module', 'form_id', 'device_id', 'status']),
-            'countries' => Country::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'filters' => array_merge($request->only(['country_code', 'reporting_module', 'form_id', 'device_id', 'status']), [
+                'country_code' => $this->selectedCountryCode($request),
+            ]),
+            'countries' => $this->countriesForUser($request),
             'moduleLabels' => DynamicForm::moduleLabels(),
         ]);
     }
 
     public function show(MobileSubmission $submission): View
     {
+        $this->assertCanAccessRecordCountry(request(), $submission);
+
         return view('admin.submissions.show', [
             'submission' => $submission,
             'answerRows' => $this->answerRows($submission),
@@ -119,7 +126,7 @@ class AdminSubmissionController extends Controller
     private function filteredQuery(Request $request): Builder
     {
         return MobileSubmission::query()
-            ->when($request->filled('country_code'), fn (Builder $query) => $query->where('country_code', strtoupper($request->string('country_code')->toString())))
+            ->when($this->selectedCountryCode($request), fn (Builder $query, string $countryCode) => $query->where('country_code', $countryCode))
             ->when($request->filled('reporting_module'), fn (Builder $query) => $query->where('reporting_module', DynamicForm::normalizeModule($request->string('reporting_module')->toString())))
             ->when($request->filled('form_id'), fn (Builder $query) => $query->where('form_id', $request->string('form_id')->toString()))
             ->when($request->filled('device_id'), fn (Builder $query) => $query->where('device_id', $request->string('device_id')->toString()))

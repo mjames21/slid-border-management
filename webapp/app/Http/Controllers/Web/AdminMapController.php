@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use Illuminate\Http\Request;
@@ -9,16 +10,16 @@ use Illuminate\View\View;
 
 class AdminMapController extends Controller
 {
+    use ResolvesTenantScope;
+
     public function index(Request $request): View
     {
-        $selectedCountryCode = strtoupper((string) $request->query('country_code', 'SLE'));
-        $selectedCountry = Country::query()->find($selectedCountryCode) ?: Country::query()->find('SLE');
+        $selectedCountryCode = $this->defaultCountryCode($request);
+        $selectedCountry = $this->countryQueryForUser($request)->find($selectedCountryCode)
+            ?: $this->countryQueryForUser($request)->first();
 
         return view('admin.map.index', [
-            'countries' => Country::query()
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(),
+            'countries' => $this->countriesForUser($request),
             'selectedCountry' => $selectedCountry,
         ]);
     }

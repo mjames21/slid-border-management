@@ -1,5 +1,7 @@
 @php
-    $showAdminShell = auth()->check() && auth()->user()?->is_admin;
+    $currentUser = auth()->user();
+    $showAdminShell = auth()->check() && $currentUser?->is_admin;
+    $canManagePlatformRequests = $currentUser?->canManageDeploymentRequests() ?? false;
 
     $navGroups = [
         'Workspace' => [
@@ -16,10 +18,15 @@
         ],
         'Administration' => [
             ['label' => 'Users', 'route' => 'admin.users.index', 'active' => 'admin.users.*'],
-            ['label' => 'Deployment Requests', 'route' => 'admin.deployment-requests.index', 'active' => 'admin.deployment-requests.*'],
             ['label' => 'Profile', 'route' => 'profile.show', 'active' => 'profile.*'],
         ],
     ];
+
+    if ($canManagePlatformRequests) {
+        $navGroups['Platform'] = [
+            ['label' => 'Deployment Requests', 'route' => 'admin.deployment-requests.index', 'active' => 'admin.deployment-requests.*'],
+        ];
+    }
 
     $shellProjects = collect();
     $shellCounts = ['deployed' => 0, 'draft' => 0, 'archived' => 0];
@@ -1364,6 +1371,13 @@
                     @php($isActive = collect((array) $item['active'])->contains(fn ($active) => request()->routeIs($active)))
                     <a class="system-nav-link {{ $isActive ? 'active' : '' }}" href="{{ route($item['route']) }}">{{ $item['label'] }}</a>
                 @endforeach
+                @if($canManagePlatformRequests)
+                    <div class="project-section-label">Platform</div>
+                    @foreach($navGroups['Platform'] as $item)
+                        @php($isActive = collect((array) $item['active'])->contains(fn ($active) => request()->routeIs($active)))
+                        <a class="system-nav-link {{ $isActive ? 'active' : '' }}" href="{{ route($item['route']) }}">{{ $item['label'] }}</a>
+                    @endforeach
+                @endif
             </div>
 
             <div class="sidebar-footer">

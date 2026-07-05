@@ -98,7 +98,7 @@ class LocationOptionCatalog
         return $schema;
     }
 
-    public function importSpreadsheet(string $path): array
+    public function importSpreadsheet(string $path, ?array $allowedCountryCodes = null): array
     {
         $sheet = IOFactory::load($path)->getActiveSheet();
         $rows = $sheet->toArray(null, true, true, true);
@@ -120,6 +120,12 @@ class LocationOptionCatalog
             if ($countryCode === null || $name === '') {
                 $skipped++;
                 $errors[] = 'Row '.($rowNumber + 2).': country and location name are required.';
+                continue;
+            }
+
+            if ($allowedCountryCodes !== null && !in_array($countryCode, $allowedCountryCodes, true)) {
+                $skipped++;
+                $errors[] = 'Row '.($rowNumber + 2).": {$countryCode} is outside your workspace.";
                 continue;
             }
 

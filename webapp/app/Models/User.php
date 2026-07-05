@@ -16,6 +16,12 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
+    public const ROLE_PLATFORM_ADMIN = 'platform_admin';
+    public const ROLE_HQ_ADMIN = 'hq_admin';
+    public const ROLE_BORDER_OFFICER = 'border_officer';
+    public const ROLE_BORDER_SUPERVISOR = 'border_supervisor';
+    public const ROLE_REGIONAL_SUPERVISOR = 'regional_supervisor';
+
     use HasApiTokens;
 
     /** @use HasFactory<UserFactory> */
@@ -108,8 +114,41 @@ class User extends Authenticatable
         return $this->is_active && $this->border_post_id !== null;
     }
 
+    public function isPlatformAdmin(): bool
+    {
+        return $this->is_admin && $this->role === self::ROLE_PLATFORM_ADMIN;
+    }
+
+    public function canManageAllTenants(): bool
+    {
+        return $this->isPlatformAdmin();
+    }
+
+    public function canManageDeploymentRequests(): bool
+    {
+        return $this->isPlatformAdmin();
+    }
+
+    public function tenantCountryCode(): ?string
+    {
+        $countryCode = $this->borderPost?->country_code ?: $this->country_code;
+
+        return $countryCode ? strtoupper($countryCode) : null;
+    }
+
+    public function canAccessCountry(?string $countryCode): bool
+    {
+        if ($this->canManageAllTenants()) {
+            return true;
+        }
+
+        $tenantCountryCode = $this->tenantCountryCode();
+
+        return $tenantCountryCode !== null && strtoupper((string) $countryCode) === $tenantCountryCode;
+    }
+
     public function operationalCountryCode(): string
     {
-        return $this->borderPost?->country_code ?: $this->country_code ?: 'SLE';
+        return $this->tenantCountryCode() ?: 'SLE';
     }
 }

@@ -3,8 +3,8 @@
 @section('content')
     <div class="header">
         <div>
-            <h1 class="title">Deployment Requests</h1>
-            <p class="subtitle">Review country and agency requests from the public deployment form.</p>
+            <h1 class="title">Platform Deployment Requests</h1>
+            <p class="subtitle">Platform admins review workspace and private deployment requests from governments and border agencies.</p>
         </div>
     </div>
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateCountryBrandingRequest;
 use App\Models\Country;
@@ -14,23 +15,26 @@ use Illuminate\View\View;
 
 class AdminCountryController extends Controller
 {
-    public function index(): View
+    use ResolvesTenantScope;
+
+    public function index(Request $request): View
     {
-        $countries = Country::query()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $countries = $this->countriesForUser($request);
 
         return view('admin.countries.index', compact('countries'));
     }
 
-    public function edit(Country $country): View
+    public function edit(Request $request, Country $country): View
     {
+        $this->assertCanAccessCountry($request, $country->code);
+
         return view('admin.countries.edit', compact('country'));
     }
 
     public function update(UpdateCountryBrandingRequest $request, Country $country, AuditLogger $audit, CountryBoundaryImporter $boundaries): RedirectResponse
     {
+        $this->assertCanAccessCountry($request, $country->code);
+
         $validated = $request->validated();
 
         if ($request->hasFile('logo')) {
@@ -92,6 +96,8 @@ class AdminCountryController extends Controller
 
     public function updateBoundary(Request $request, Country $country, AuditLogger $audit, CountryBoundaryImporter $boundaries): RedirectResponse
     {
+        $this->assertCanAccessCountry($request, $country->code);
+
         $validated = $request->validate([
             'boundary_file' => ['required', 'file', 'max:20480', 'extensions:geojson,json,zip,shp'],
         ], $this->boundaryUploadMessages());

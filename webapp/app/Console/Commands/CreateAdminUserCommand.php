@@ -12,8 +12,8 @@ use Illuminate\Validation\Rules\Password;
 
 class CreateAdminUserCommand extends Command
 {
-    protected $signature = 'admin:create-user {name?} {email?} {--password=}';
-    protected $description = 'Create an administrator user for the SLID backend';
+    protected $signature = 'admin:create-user {name?} {email?} {--password=} {--country-admin : Create a country workspace administrator instead of a platform administrator}';
+    protected $description = 'Create an administrator user for the BorderReach backend';
 
     public function handle(): int
     {
@@ -37,13 +37,15 @@ class CreateAdminUserCommand extends Command
             return self::FAILURE;
         }
 
-        $user = DB::transaction(function () use ($name, $email, $password) {
+        $role = $this->option('country-admin') ? User::ROLE_HQ_ADMIN : User::ROLE_PLATFORM_ADMIN;
+
+        $user = DB::transaction(function () use ($name, $email, $password, $role) {
             $user = User::query()->create([
                 'name' => $name,
                 'email' => $email,
                 'password' => Hash::make($password),
                 'is_admin' => true,
-                'role' => 'hq_admin',
+                'role' => $role,
                 'is_active' => true,
             ]);
 
@@ -58,7 +60,7 @@ class CreateAdminUserCommand extends Command
             return $user;
         });
 
-        $this->info("Administrator created: {$user->email}");
+        $this->info("Administrator created: {$user->email} ({$user->role})");
         return self::SUCCESS;
     }
 }

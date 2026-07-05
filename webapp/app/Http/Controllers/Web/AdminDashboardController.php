@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Models\BorderPost;
 use App\Models\Country;
@@ -17,13 +18,15 @@ use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
 {
+    use ResolvesTenantScope;
+
     private const DEFAULT_LAYOUT = ['map', 'timeline', 'breakdowns', 'quality', 'discover', 'devices', 'detail', 'reports', 'aggregates'];
     private const MAX_MAP_BOUNDARY_COORDINATES = 12000;
 
     public function index(Request $request): View
     {
         return view('admin.dashboard.index', [
-            'countries' => Country::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'countries' => $this->countriesForUser($request),
             'dashboardViews' => $this->serializedDashboardViews($request->user()->id),
             'filterFields' => $this->publicFilterFields(),
             'operatorLabels' => $this->operatorLabels(),
@@ -32,8 +35,9 @@ class AdminDashboardController extends Controller
 
     public function data(Request $request, CountryBoundaryImporter $boundaries): JsonResponse
     {
-        $countryCode = strtoupper((string) $request->query('country_code', 'SLE'));
-        $country = Country::query()->find($countryCode) ?: Country::query()->find('SLE');
+        $countryCode = $this->defaultCountryCode($request);
+        $country = $this->countryQueryForUser($request)->find($countryCode)
+            ?: $this->countryQueryForUser($request)->first();
         $hours = max(1, min(168, (int) $request->query('hours', 24)));
         $filters = $this->normalizeFilters($request->query('filters', []));
         $search = substr(trim((string) $request->query('q', '')), 0, 120);
@@ -144,6 +148,7 @@ class AdminDashboardController extends Controller
             'layout' => ['nullable', 'array'],
             'is_default' => ['nullable', 'boolean'],
         ]);
+        $this->assertCanAccessCountry($request, $validated['country_code']);
 
         $userId = $request->user()->id;
         $name = trim($validated['name']);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOutboundWebhookRequest;
 use App\Jobs\DeliverSubmissionWebhook;
@@ -17,10 +18,13 @@ use Illuminate\View\View;
 
 class AdminWebhookController extends Controller
 {
-    public function index(): View
+    use ResolvesTenantScope;
+
+    public function index(Request $request): View
     {
         $webhooks = OutboundWebhook::query()
             ->with('country')
+            ->when($this->selectedCountryCode($request), fn ($query, string $countryCode) => $query->where('country_code', $countryCode))
             ->withCount([
                 'deliveries',
                 'deliveries as succeeded_deliveries_count' => fn ($query) => $query->where('status', WebhookDelivery::STATUS_SUCCEEDED),
@@ -32,6 +36,9 @@ class AdminWebhookController extends Controller
 
         $recentDeliveries = WebhookDelivery::query()
             ->with(['outboundWebhook.country', 'mobileSubmission'])
+            ->whereHas('outboundWebhook', function ($query) use ($request): void {
+                $query->when($this->selectedCountryCode($request), fn ($query, string $countryCode) => $query->where('country_code', $countryCode));
+            })
             ->latest('updated_at')
             ->limit(12)
             ->get();
@@ -39,7 +46,7 @@ class AdminWebhookController extends Controller
         return view('admin.webhooks.index', [
             'webhooks' => $webhooks,
             'recentDeliveries' => $recentDeliveries,
-            'countries' => Country::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
+            'countries' => $this->countryQueryForUser($request)->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
             'moduleLabels' => DynamicForm::moduleLabels(),
         ]);
     }
@@ -47,6 +54,7 @@ class AdminWebhookController extends Controller
     public function store(StoreOutboundWebhookRequest $request, AuditLogger $audit): RedirectResponse
     {
         $validated = $request->validated();
+        $this->assertCanAccessCountry($request, $validated['country_code']);
 
         $webhook = OutboundWebhook::query()->create([
             'country_code' => strtoupper($validated['country_code']),
@@ -74,6 +82,8 @@ class AdminWebhookController extends Controller
 
     public function toggle(Request $request, OutboundWebhook $webhook, AuditLogger $audit): RedirectResponse
     {
+        $this->assertCanAccessRecordCountry($request, $webhook);
+
         $webhook->forceFill(['is_active' => ! $webhook->is_active])->save();
 
         $audit->record('admin.rest_service_toggled', $request->user(), null, $webhook, [
@@ -85,6 +95,9 @@ class AdminWebhookController extends Controller
 
     public function retry(Request $request, WebhookDelivery $delivery, AuditLogger $audit): RedirectResponse
     {
+        $delivery->loadMissing('outboundWebhook');
+        $this->assertCanAccessRecordCountry($request, $delivery->outboundWebhook);
+
         $delivery->forceFill([
             'status' => WebhookDelivery::STATUS_PENDING,
             'error_message' => null,

@@ -97,9 +97,13 @@ class TenantDeploymentRequestTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_review_and_update_deployment_requests(): void
+    public function test_platform_admin_can_review_and_update_deployment_requests(): void
     {
-        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'is_active' => true,
+            'role' => User::ROLE_PLATFORM_ADMIN,
+        ]);
         $deploymentRequest = DeploymentRequest::query()->create([
             'country_name' => 'The Gambia',
             'agency_name' => 'Gambia Immigration Department',
@@ -126,6 +130,40 @@ class TenantDeploymentRequestTest extends TestCase
         $this->assertDatabaseHas('deployment_requests', [
             'id' => $deploymentRequest->id,
             'status' => DeploymentRequest::STATUS_CONTACTED,
+        ]);
+    }
+
+    public function test_country_admin_cannot_manage_platform_deployment_requests(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'is_active' => true,
+            'role' => User::ROLE_HQ_ADMIN,
+        ]);
+        $deploymentRequest = DeploymentRequest::query()->create([
+            'country_name' => 'The Gambia',
+            'agency_name' => 'Gambia Immigration Department',
+            'contact_name' => 'Lamin Jallow',
+            'contact_email' => 'lamin.jallow@example.gm',
+            'deployment_plan' => Country::PLAN_EVALUATION,
+            'deployment_type' => Country::DEPLOYMENT_HYBRID,
+            'modules' => ['immigration'],
+            'status' => DeploymentRequest::STATUS_NEW,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.deployment-requests.index'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->post(route('admin.deployment-requests.update', $deploymentRequest), [
+                'status' => DeploymentRequest::STATUS_CONTACTED,
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('deployment_requests', [
+            'id' => $deploymentRequest->id,
+            'status' => DeploymentRequest::STATUS_NEW,
         ]);
     }
 

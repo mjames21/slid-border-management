@@ -16,7 +16,11 @@ class AdminCountryScopedModulesTest extends TestCase
 
     public function test_admin_lists_filter_border_posts_users_forms_and_locations_by_country(): void
     {
-        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'is_active' => true,
+            'role' => User::ROLE_PLATFORM_ADMIN,
+        ]);
 
         $slePost = BorderPost::query()->create([
             'country_code' => 'SLE',
@@ -126,7 +130,12 @@ class AdminCountryScopedModulesTest extends TestCase
 
     public function test_submission_show_renders_schema_ordered_answer_table(): void
     {
-        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'is_active' => true,
+            'country_code' => 'SLE',
+            'role' => User::ROLE_HQ_ADMIN,
+        ]);
         $form = DynamicForm::query()->create([
             'country_code' => 'SLE',
             'reporting_module' => DynamicForm::MODULE_IMMIGRATION,
@@ -192,5 +201,60 @@ class AdminCountryScopedModulesTest extends TestCase
             ->assertSee('Unexpected Note')
             ->assertSee('Manual note retained')
             ->assertSee('Not found in form schema');
+    }
+
+    public function test_country_admin_is_scoped_to_own_workspace_even_when_url_requests_another_country(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'is_active' => true,
+            'country_code' => 'SLE',
+            'role' => User::ROLE_HQ_ADMIN,
+        ]);
+
+        DynamicForm::query()->create([
+            'country_code' => 'SLE',
+            'reporting_module' => DynamicForm::MODULE_IMMIGRATION,
+            'form_id' => 'sle_only_form',
+            'title' => 'Sierra Leone Only Form',
+        ]);
+        DynamicForm::query()->create([
+            'country_code' => 'LBR',
+            'reporting_module' => DynamicForm::MODULE_CUSTOMS,
+            'form_id' => 'lbr_hidden_form',
+            'title' => 'Liberia Hidden Form',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/forms?country_code=LBR')
+            ->assertOk()
+            ->assertSee('Sierra Leone Only Form')
+            ->assertDontSee('Liberia Hidden Form');
+    }
+
+    public function test_country_admin_cannot_open_another_workspace_submission(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'is_active' => true,
+            'country_code' => 'SLE',
+            'role' => User::ROLE_HQ_ADMIN,
+        ]);
+
+        $submission = MobileSubmission::query()->create([
+            'device_id' => 'lbr-device',
+            'local_id' => 'lbr-submission-1',
+            'form_id' => 'lbr_form',
+            'form_version' => 1,
+            'answers' => ['traveller_name' => 'Hidden Traveller'],
+            'received_at' => now(),
+            'country_code' => 'LBR',
+            'reporting_module' => DynamicForm::MODULE_IMMIGRATION,
+            'status' => 'accepted',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.submissions.show', $submission))
+            ->assertForbidden();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BuildFormRequest;
 use App\Http\Requests\ImportXlsFormRequest;
@@ -23,6 +24,8 @@ use Illuminate\View\View;
 
 class AdminFormController extends Controller
 {
+    use ResolvesTenantScope;
+
     public function index(Request $request): View
     {
         $selectedCountry = $this->selectedCountryCode($request);
@@ -53,7 +56,7 @@ class AdminFormController extends Controller
 
         return view('admin.forms.index', [
             'forms' => $forms,
-            'countries' => Country::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'countries' => $this->countriesForUser($request),
             'moduleLabels' => DynamicForm::moduleLabels(),
             'projectStats' => $projectStats,
             'templateForms' => $templateForms,
@@ -71,10 +74,10 @@ class AdminFormController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         return view('admin.forms.create', [
-            'countries' => Country::query()->orderBy('sort_order')->get(),
+            'countries' => $this->countriesForUser($request),
             'moduleLabels' => DynamicForm::moduleLabels(),
             'defaultStandardReference' => DynamicForm::standardReferenceForModule(DynamicForm::MODULE_IMMIGRATION),
         ]);
@@ -92,7 +95,7 @@ class AdminFormController extends Controller
             'selectedTemplate' => $selectedTemplate,
             'standardReference' => $selectedTemplate['standard_reference'] ?? DynamicForm::standardReferenceForModule($selectedTemplate['reporting_module'] ?? null),
             'optionSources' => $locations->sourceLabels(),
-            'countries' => Country::query()->orderBy('sort_order')->get(),
+            'countries' => $this->countriesForUser($request),
             'moduleLabels' => DynamicForm::moduleLabels(),
             'action' => route('admin.forms.builder.store'),
         ]);
@@ -101,6 +104,7 @@ class AdminFormController extends Controller
     public function editBuilder(DynamicForm $form, FormBuilderCompiler $builder, FormTemplateLibrary $templates, LocationOptionCatalog $locations): View
     {
         abort_if($form->is_template, 403, 'Built-in templates are read-only. Clone the template before editing it.');
+        $this->assertCanAccessRecordCountry(request(), $form);
 
         $version = $form->versions()->latest('version')->first();
 
@@ -112,7 +116,7 @@ class AdminFormController extends Controller
             'selectedTemplate' => null,
             'standardReference' => $version?->compiled_schema['standardReference'] ?? DynamicForm::standardReferenceForModule($form->reporting_module),
             'optionSources' => $locations->sourceLabels(),
-            'countries' => Country::query()->orderBy('sort_order')->get(),
+            'countries' => $this->countriesForUser(request()),
             'moduleLabels' => DynamicForm::moduleLabels(),
             'action' => route('admin.forms.builder.update', $form),
         ]);
@@ -132,6 +136,7 @@ class AdminFormController extends Controller
                 ->route('admin.forms.show', $form)
                 ->with('status', 'Built-in templates are read-only. Clone the template before editing it.');
         }
+        $this->assertCanAccessRecordCountry($request, $form);
 
         $form = $this->createBuilderVersion($request, $builder, $audit, $form);
 
@@ -140,6 +145,8 @@ class AdminFormController extends Controller
 
     public function store(ImportXlsFormRequest $request, XlsFormCompiler $compiler, AuditLogger $audit): RedirectResponse
     {
+        $this->assertCanAccessCountry($request, $request->validated('country_code'));
+
         $path = $request->file('file')->store('xlsforms');
         $fullPath = Storage::path($path);
 
@@ -210,6 +217,8 @@ class AdminFormController extends Controller
 
     public function show(DynamicForm $form): View
     {
+        $this->assertCanAccessRecordCountry(request(), $form);
+
         $form->load(['country', 'publishedVersion', 'versions' => fn ($query) => $query->latest('version')]);
 
         return view('admin.forms.show', ['form' => $form]);
@@ -226,6 +235,8 @@ class AdminFormController extends Controller
 
         $sourceVersion = $template->publishedVersion ?: $template->versions()->latest('version')->firstOrFail();
         $countryCode = strtoupper((string) ($validated['country_code'] ?? $template->country_code));
+        $this->assertCanAccessCountry($request, $countryCode);
+
         $title = trim((string) ($validated['title'] ?? '')) ?: $template->title;
         $formId = $this->uniqueClonedFormId($countryCode, $title, $template->form_id);
 
@@ -276,6 +287,7 @@ class AdminFormController extends Controller
         if ($form->is_template) {
             return back()->with('status', 'Built-in templates are read-only. Clone the template before publishing an operational project.');
         }
+        $this->assertCanAccessRecordCountry(request(), $form);
 
         $formVersion = $form->versions()->where('version', $version)->firstOrFail();
 
@@ -299,6 +311,8 @@ class AdminFormController extends Controller
     {
         return DB::transaction(function () use ($request, $builder, $audit, $form) {
             $validated = $request->validated();
+            $this->assertCanAccessCountry($request, $validated['country_code'] ?? $form?->country_code);
+
             if (! $form) {
                 $requestedFormId = strtolower($validated['form_id']);
                 $existingTemplate = DynamicForm::query()
@@ -439,13 +453,6 @@ class AdminFormController extends Controller
             ->values();
 
         return $merged->merge($customRows)->values()->all();
-    }
-
-    private function selectedCountryCode(Request $request): ?string
-    {
-        $countryCode = strtoupper(trim((string) $request->query('country_code', '')));
-
-        return $countryCode !== '' ? $countryCode : null;
     }
 
     private function projectStats(iterable $forms, ?string $selectedCountry): \Illuminate\Support\Collection

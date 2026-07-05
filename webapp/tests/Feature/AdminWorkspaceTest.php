@@ -21,12 +21,11 @@ class AdminWorkspaceTest extends TestCase
             ->get(route('admin.projects.index'))
             ->assertOk()
             ->assertSee('Projects')
-            ->assertSee('Manage standardized border reporting projects')
+            ->assertSee('Create, publish, and review standardized border reporting projects.')
             ->assertSee('ICAO Doc 9303 Full Inspection')
-            ->assertSee('Form builder')
-            ->assertSee('Data')
-            ->assertSee('Analysis')
-            ->assertSee('Team');
+            ->assertSee('No projects yet')
+            ->assertSee('Template Library')
+            ->assertSee('Clone Template');
     }
 
     public function test_admin_dashboard_entry_redirects_to_project_workspace(): void

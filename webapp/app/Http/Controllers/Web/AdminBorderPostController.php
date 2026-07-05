@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Models\BorderPost;
 use App\Models\Country;
@@ -14,6 +15,8 @@ use Illuminate\View\View;
 
 class AdminBorderPostController extends Controller
 {
+    use ResolvesTenantScope;
+
     public function index(Request $request): View
     {
         $selectedCountry = $this->selectedCountryCode($request);
@@ -28,22 +31,23 @@ class AdminBorderPostController extends Controller
 
         return view('admin.border-posts.index', [
             'borderPosts' => $borderPosts,
-            'countries' => Country::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'countries' => $this->countriesForUser($request),
             'filters' => ['country_code' => $selectedCountry],
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         return view('admin.border-posts.form', [
             'borderPost' => new BorderPost(['is_active' => true, 'allowed_radius_meters' => 250]),
-            'countries' => Country::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'countries' => $this->countriesForUser($request),
         ]);
     }
 
     public function store(Request $request, AuditLogger $audit): RedirectResponse
     {
         $validated = $this->validateBorderPost($request);
+        $this->assertCanAccessCountry($request, $validated['country_code']);
 
         $borderPost = BorderPost::query()->create($validated);
 
@@ -56,17 +60,21 @@ class AdminBorderPostController extends Controller
         return redirect()->route('admin.border-posts.index')->with('status', 'Border post created.');
     }
 
-    public function edit(BorderPost $borderPost): View
+    public function edit(Request $request, BorderPost $borderPost): View
     {
+        $this->assertCanAccessRecordCountry($request, $borderPost);
+
         return view('admin.border-posts.form', [
             'borderPost' => $borderPost,
-            'countries' => Country::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'countries' => $this->countriesForUser($request),
         ]);
     }
 
     public function update(Request $request, BorderPost $borderPost, AuditLogger $audit): RedirectResponse
     {
         $validated = $this->validateBorderPost($request, $borderPost);
+        $this->assertCanAccessRecordCountry($request, $borderPost);
+        $this->assertCanAccessCountry($request, $validated['country_code']);
 
         $borderPost->fill($validated)->save();
 
@@ -131,10 +139,4 @@ class AdminBorderPostController extends Controller
         return Str::upper(Str::slug($address, '-'));
     }
 
-    private function selectedCountryCode(Request $request): ?string
-    {
-        $countryCode = strtoupper(trim((string) $request->query('country_code', '')));
-
-        return $countryCode !== '' ? $countryCode : null;
-    }
 }

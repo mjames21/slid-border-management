@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UploadFrequentLocationsRequest;
 use App\Models\Country;
@@ -15,6 +16,8 @@ use Illuminate\View\View;
 
 class AdminLocationController extends Controller
 {
+    use ResolvesTenantScope;
+
     public function index(Request $request): View
     {
         $selectedCountry = $this->selectedCountryCode($request);
@@ -29,6 +32,7 @@ class AdminLocationController extends Controller
 
         $counts = FrequentLocation::query()
             ->where('is_active', true)
+            ->when($selectedCountry, fn ($query) => $query->where('country_code', $selectedCountry))
             ->selectRaw('country_code, count(*) as total')
             ->groupBy('country_code')
             ->pluck('total', 'country_code');
@@ -36,7 +40,7 @@ class AdminLocationController extends Controller
         return view('admin.locations.index', [
             'locations' => $locations,
             'counts' => $counts,
-            'countries' => Country::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'countries' => $this->countriesForUser($request),
             'filters' => ['country_code' => $selectedCountry],
         ]);
     }
@@ -44,7 +48,10 @@ class AdminLocationController extends Controller
     public function store(UploadFrequentLocationsRequest $request, LocationOptionCatalog $catalog, AuditLogger $audit): RedirectResponse
     {
         $path = $request->file('file')->store('location-imports');
-        $result = $catalog->importSpreadsheet(Storage::path($path));
+        $allowedCountries = $request->user()?->canManageAllTenants()
+            ? null
+            : [$request->user()?->tenantCountryCode()];
+        $result = $catalog->importSpreadsheet(Storage::path($path), $allowedCountries);
 
         $audit->record('admin.frequent_locations_imported', $request->user(), metadata: [
             'path' => $path,
@@ -61,10 +68,4 @@ class AdminLocationController extends Controller
             ->with('location_import_errors', array_slice($result['errors'], 0, 10));
     }
 
-    private function selectedCountryCode(Request $request): ?string
-    {
-        $countryCode = strtoupper(trim((string) $request->query('country_code', '')));
-
-        return $countryCode !== '' ? $countryCode : null;
-    }
 }

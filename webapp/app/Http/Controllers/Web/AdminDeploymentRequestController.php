@@ -14,6 +14,8 @@ class AdminDeploymentRequestController extends Controller
 {
     public function index(): View
     {
+        abort_unless(request()->user()?->canManageDeploymentRequests(), 403, 'Platform administrator access is required.');
+
         $deploymentRequests = DeploymentRequest::query()
             ->latest()
             ->paginate(25);
@@ -26,6 +28,8 @@ class AdminDeploymentRequestController extends Controller
 
     public function update(Request $request, DeploymentRequest $deploymentRequest, AuditLogger $audit): RedirectResponse
     {
+        abort_unless($request->user()?->canManageDeploymentRequests(), 403, 'Platform administrator access is required.');
+
         $validated = $request->validate([
             'status' => ['required', Rule::in(array_keys(DeploymentRequest::statusLabels()))],
         ]);

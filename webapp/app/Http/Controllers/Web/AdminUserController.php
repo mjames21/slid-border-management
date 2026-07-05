@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Models\BorderPost;
 use App\Models\Country;
@@ -24,6 +25,8 @@ use Illuminate\View\View;
 
 class AdminUserController extends Controller
 {
+    use ResolvesTenantScope;
+
     public function index(Request $request): View
     {
         $selectedCountry = $this->selectedCountryCode($request);
@@ -37,15 +40,20 @@ class AdminUserController extends Controller
 
         return view('admin.users.index', [
             'users' => $users,
-            'countries' => Country::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'countries' => $this->countriesForUser($request),
             'filters' => ['country_code' => $selectedCountry],
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         return view('admin.users.create', [
-            'borderPosts' => BorderPost::query()->where('is_active', true)->orderBy('country_code')->orderBy('name')->get(),
+            'borderPosts' => BorderPost::query()
+                ->where('is_active', true)
+                ->when($this->selectedCountryCode($request), fn ($query, string $countryCode) => $query->where('country_code', $countryCode))
+                ->orderBy('country_code')
+                ->orderBy('name')
+                ->get(),
             'roles' => $this->roles(),
         ]);
     }
@@ -62,6 +70,7 @@ class AdminUserController extends Controller
         ]);
 
         $borderPost = BorderPost::query()->findOrFail($validated['border_post_id']);
+        $this->assertCanAccessRecordCountry($request, $borderPost);
 
         $user = DB::transaction(function () use ($validated, $borderPost) {
             $user = User::query()->create([
@@ -97,6 +106,7 @@ class AdminUserController extends Controller
     public function setupQr(Request $request, User $user): View
     {
         abort_if($user->is_admin, 404);
+        $this->assertCanAccessRecordCountry($request, $user);
 
         return view('admin.users.setup-qr', [
             'user' => $user->load(['country', 'borderPost']),
@@ -108,6 +118,7 @@ class AdminUserController extends Controller
     public function generateSetupQr(Request $request, User $user, AuditLogger $audit): View
     {
         abort_if($user->is_admin, 404);
+        $this->assertCanAccessRecordCountry($request, $user);
 
         $validated = $request->validate([
             'server_url' => ['required', 'url', 'max:255'],
@@ -165,13 +176,6 @@ class AdminUserController extends Controller
             'border_supervisor' => 'Border Supervisor',
             'regional_supervisor' => 'Regional Supervisor',
         ];
-    }
-
-    private function selectedCountryCode(Request $request): ?string
-    {
-        $countryCode = strtoupper(trim((string) $request->query('country_code', '')));
-
-        return $countryCode !== '' ? $countryCode : null;
     }
 
     private function defaultServerUrl(Request $request): string
