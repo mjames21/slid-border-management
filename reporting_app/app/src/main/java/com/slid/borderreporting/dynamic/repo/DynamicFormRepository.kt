@@ -27,6 +27,10 @@ import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import retrofit2.HttpException
 
 class DynamicFormRepository(
     private val formDao: DynamicFormDao,
@@ -263,12 +267,13 @@ class DynamicFormRepository(
         val response = try {
             api().syncSubmissions(session.authorizationHeader(), request)
         } catch (error: Exception) {
+            val syncError = error.apiMessage()
             submissionDao.recordSyncError(
                 localIds = attemptedIds,
                 updatedAt = System.currentTimeMillis(),
-                syncError = error.message?.takeIf { it.isNotBlank() } ?: "Unable to reach the server."
+                syncError = syncError
             )
-            throw error
+            throw SubmissionSyncException(syncError, error)
         }
         val now = System.currentTimeMillis()
         val acceptedReceipts = response.accepted.associateBy { it.localId }
@@ -395,6 +400,24 @@ class DynamicFormRepository(
             capturedAt = deviceLocationCapturedAt ?: updatedAt
         )
     }
+
+    private fun Throwable.apiMessage(): String {
+        if (this is HttpException) {
+            val body = response()?.errorBody()?.string().orEmpty()
+            val parsed = runCatching {
+                val obj = json.decodeFromString(JsonObject.serializer(), body)
+                (obj["message"] as? JsonPrimitive)?.contentOrNull
+            }.getOrNull()
+
+            return parsed
+                ?.takeIf { it.isNotBlank() }
+                ?: "Server rejected the submission batch with HTTP ${code()}."
+        }
+
+        return message?.takeIf { it.isNotBlank() } ?: "Unable to reach the server."
+    }
+
+    class SubmissionSyncException(message: String, cause: Throwable) : Exception(message, cause)
 
     private suspend fun upsertForms(config: MobileConfigResponse) {
         if (config.activeForms.isEmpty()) return
