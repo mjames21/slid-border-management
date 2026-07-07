@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AdminBorderPostController;
+use App\Http\Controllers\Web\AdminAuthController;
 use App\Http\Controllers\Web\AdminCountryController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\AdminDeploymentRequestController;
@@ -21,6 +22,10 @@ Route::middleware(SecurityHeaders::class)->group(function () {
     Route::post('/deployment-requests', [DeploymentRequestController::class, 'store'])
         ->middleware('throttle:5,1')
         ->name('deployment-requests.store');
+
+    Route::get('/logout', [AdminAuthController::class, 'logout'])
+        ->middleware('auth')
+        ->name('logout.get');
 
     Route::middleware('guest')->group(function () {
         Route::get('/admin/login', fn () => redirect()->route('login'))->name('admin.login');
