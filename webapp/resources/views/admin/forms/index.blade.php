@@ -100,6 +100,11 @@
                     <a class="tool-button" href="{{ route('admin.forms.builder.edit', $form) }}">Form builder</a>
                     <a class="tool-button" href="{{ route('admin.submissions.index', ['country_code' => $form->country_code, 'form_id' => $form->form_id]) }}">Data</a>
                     <a class="tool-button" href="{{ route('admin.map.index', ['country_code' => $form->country_code]) }}">Map</a>
+                    <form method="POST" action="{{ route('admin.forms.destroy', $form) }}" onsubmit="return confirm('Delete this project? Projects with synced records are protected and will not be deleted.');">
+                        @csrf
+                        @method('DELETE')
+                        <button class="tool-button danger" type="submit">Delete</button>
+                    </form>
                 </div>
             </article>
         @empty

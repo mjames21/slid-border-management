@@ -100,7 +100,7 @@ fun DynamicLoginScreen(
                 value = uiState.serverUrl,
                 onValueChange = onServerUrlChange,
                 label = { Text("Server URL") },
-                supportingText = { Text("Use http://10.0.2.2:8000/ on emulator or your computer IP on a real device.") },
+                supportingText = { Text("Use the BorderReach server URL, for example https://borderreach.slid.datahub.gov.sl/.") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)

@@ -57,9 +57,9 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" sh ./gra
 
 The login screen includes an editable **Server URL** field, similar to ODK Collect. The value is saved locally and used for login, branding, form download, logout, and submission sync.
 
-Debug builds default to `http://10.0.2.2:8000/`, which maps an Android emulator to the Laravel dev server running on the host machine. On a real Android device, use the computer's LAN address instead, for example `http://192.168.1.20:8000/`, and make sure the phone and computer are on the same network.
+Debug and release builds default to `https://borderreach.slid.datahub.gov.sl/` for field testing. For local emulator development, temporarily set `API_BASE_URL` in `app/build.gradle.kts` to `http://10.0.2.2:8000/`, which maps an Android emulator to the Laravel dev server running on the host machine.
 
-Release builds use the `API_BASE_URL` build config value in `app/build.gradle.kts`; set that to the production HTTPS endpoint before field deployment.
+Release builds use the `API_BASE_URL` build config value in `app/build.gradle.kts`; keep that value on a production HTTPS endpoint before field deployment.
 
 ## QR setup
 

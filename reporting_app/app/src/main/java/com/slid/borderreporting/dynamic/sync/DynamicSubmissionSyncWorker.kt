@@ -15,6 +15,7 @@ class DynamicSubmissionSyncWorker(
         val repository = DynamicRepositoryFactory.create(applicationContext)
 
         return try {
+            runCatching { repository.refreshConfig() }
             repository.syncPending(deviceId = repository.storedDeviceId().ifBlank {
                 DeviceIdentity.getOrCreate(applicationContext)
             })

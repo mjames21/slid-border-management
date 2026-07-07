@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\BorderPost;
+use App\Models\Country;
 use App\Models\FrequentLocation;
+use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class LocationOptionCatalog
@@ -16,10 +18,17 @@ class LocationOptionCatalog
         'LBR' => 'Liberia',
     ];
 
+    private const CORRIDOR_COUNTRIES = [
+        'SLE' => ['SLE', 'GIN', 'LBR'],
+        'GIN' => ['GIN', 'SLE'],
+        'LBR' => ['LBR', 'SLE'],
+    ];
+
     public function sourceLabels(): array
     {
         return [
             self::MANUAL_SOURCE => 'Manual options',
+            'countries:all' => 'Countries: all configured countries',
             'locations:all' => 'Frequent locations: Sierra Leone, Guinea, Liberia',
             'locations:SLE' => 'Frequent locations: Sierra Leone',
             'locations:GIN' => 'Frequent locations: Guinea',
@@ -37,6 +46,10 @@ class LocationOptionCatalog
         $source = $source ?: self::MANUAL_SOURCE;
         if ($source === self::MANUAL_SOURCE) {
             return [];
+        }
+
+        if ($source === 'countries:all') {
+            return $this->countryOptions();
         }
 
         $query = FrequentLocation::query()
@@ -61,13 +74,19 @@ class LocationOptionCatalog
             });
         }
 
-        return $query->get()
+        $options = $query->get()
             ->map(fn (FrequentLocation $location): array => [
                 'value' => $this->optionValue($location),
                 'label' => $this->optionLabel($location),
             ])
             ->values()
             ->all();
+
+        if (str_starts_with($source, 'locations:')) {
+            $options[] = $this->otherLocationOption();
+        }
+
+        return $options;
     }
 
     public function hydrateSchema(array $schema, ?BorderPost $borderPost = null): array
@@ -76,7 +95,7 @@ class LocationOptionCatalog
         $fields = collect($schema['fields'] ?? [])
             ->map(function (array $field) use (&$choiceLists, $borderPost): array {
                 $source = $field['optionSource'] ?? null;
-                if (!$source || !str_starts_with($source, 'locations:')) {
+                if (!$source || (!in_array($source, ['countries:all'], true) && !str_starts_with($source, 'locations:'))) {
                     return $field;
                 }
 
@@ -100,6 +119,7 @@ class LocationOptionCatalog
 
     public function importSpreadsheet(string $path, ?array $allowedCountryCodes = null): array
     {
+        $allowedCountryCodes = $this->expandAllowedCountryCodes($allowedCountryCodes);
         $sheet = IOFactory::load($path)->getActiveSheet();
         $rows = $sheet->toArray(null, true, true, true);
         if (!$rows) {
@@ -116,6 +136,7 @@ class LocationOptionCatalog
             $data = $this->mapRow($headers, $row);
             $countryCode = $this->normalizeCountryCode($data['country_code'] ?? $data['country'] ?? '');
             $name = trim((string) ($data['name'] ?? $data['location'] ?? $data['place'] ?? ''));
+            $code = $this->normalizeLocationCode($data['code'] ?? $data['location_code'] ?? null);
 
             if ($countryCode === null || $name === '') {
                 $skipped++;
@@ -129,17 +150,24 @@ class LocationOptionCatalog
                 continue;
             }
 
-            $attributes = [
-                'country_code' => $countryCode,
-                'name' => $name,
-                'admin_area' => $this->nullableString($data['admin_area'] ?? $data['district'] ?? $data['province'] ?? null),
-            ];
+            $adminArea = $this->nullableString($data['admin_area'] ?? $data['district'] ?? $data['province'] ?? null);
+            $attributes = $code
+                ? ['code' => $code]
+                : [
+                    'country_code' => $countryCode,
+                    'name' => $name,
+                    'admin_area' => $adminArea,
+                ];
 
             $location = FrequentLocation::query()->firstOrNew($attributes);
             $wasNew = !$location->exists;
 
             $location->fill([
+                'code' => $code ?: $location->code ?: $this->makeLocationCode($countryCode, $name, $adminArea),
                 'country_name' => self::COUNTRY_NAMES[$countryCode],
+                'country_code' => $countryCode,
+                'name' => $name,
+                'admin_area' => $adminArea,
                 'district' => $this->nullableString($data['district'] ?? null)
                     ?: $this->inferDistrict($data['admin_area'] ?? $data['area'] ?? null),
                 'category' => $this->nullableString($data['category'] ?? $data['type'] ?? null),
@@ -168,6 +196,21 @@ class LocationOptionCatalog
         };
     }
 
+    public function expandAllowedCountryCodes(?array $countryCodes): ?array
+    {
+        if ($countryCodes === null) {
+            return null;
+        }
+
+        return collect($countryCodes)
+            ->map(fn (mixed $countryCode): ?string => $this->normalizeCountryCode((string) $countryCode))
+            ->filter()
+            ->flatMap(fn (string $countryCode): array => self::CORRIDOR_COUNTRIES[$countryCode] ?? [$countryCode])
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     private function countryCodeFromSource(string $source): ?string
     {
         if ($source === 'locations:all') {
@@ -179,8 +222,34 @@ class LocationOptionCatalog
         return $this->normalizeCountryCode($candidate);
     }
 
+    private function countryOptions(): array
+    {
+        return Country::query()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['code', 'name'])
+            ->map(fn (Country $country): array => [
+                'value' => strtolower($country->code),
+                'label' => $country->name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function otherLocationOption(): array
+    {
+        return [
+            'value' => 'other',
+            'label' => 'Other location',
+        ];
+    }
+
     private function optionValue(FrequentLocation $location): string
     {
+        if ($location->code) {
+            return $location->code;
+        }
+
         $parts = array_filter([$location->country_code, $location->name, $location->admin_area]);
         $value = strtolower(implode('_', $parts));
         $value = preg_replace('/[^a-z0-9_]+/', '_', $value) ?? '';
@@ -255,5 +324,17 @@ class LocationOptionCatalog
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function normalizeLocationCode(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? null : Str::upper(Str::slug($value, '-'));
+    }
+
+    private function makeLocationCode(string $countryCode, string $name, ?string $adminArea): string
+    {
+        return Str::upper(Str::slug(collect([$countryCode, $name, $adminArea])->filter()->implode('-'), '-'));
     }
 }

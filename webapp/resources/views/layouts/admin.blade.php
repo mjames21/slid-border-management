@@ -596,6 +596,10 @@
             background: #fbfdff;
             padding: 12px 18px;
         }
+        .project-actions form {
+            display: inline-flex;
+            margin: 0;
+        }
         .workspace-bar {
             display: flex;
             align-items: center;
@@ -743,6 +747,11 @@
             border-color: var(--green-dark);
             background: var(--green-dark);
             color: #ffffff;
+        }
+        .tool-button.danger {
+            border-color: #fecaca;
+            background: #fff5f5;
+            color: #991b1b;
         }
         .selected-count {
             display: inline-flex;

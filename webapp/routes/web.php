@@ -53,6 +53,7 @@ Route::middleware(SecurityHeaders::class)->group(function () {
             ->middleware('throttle:10,1')
             ->name('forms.templates.clone');
         Route::get('/forms/{form}', [AdminFormController::class, 'show'])->whereNumber('form')->name('forms.show');
+        Route::delete('/forms/{form}', [AdminFormController::class, 'destroy'])->whereNumber('form')->middleware('throttle:10,1')->name('forms.destroy');
         Route::get('/forms/{form}/builder', [AdminFormController::class, 'editBuilder'])->whereNumber('form')->name('forms.builder.edit');
         Route::post('/forms/{form}/builder', [AdminFormController::class, 'updateBuilder'])->whereNumber('form')->middleware('throttle:10,1')->name('forms.builder.update');
         Route::post('/forms/{form}/versions/{version}/publish', [AdminFormController::class, 'publish'])

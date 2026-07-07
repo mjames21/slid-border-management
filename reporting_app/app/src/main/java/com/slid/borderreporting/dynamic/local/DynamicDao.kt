@@ -29,6 +29,9 @@ interface DynamicSubmissionDao {
     @Query("SELECT * FROM dynamic_submissions WHERE status = 'pending_sync' ORDER BY createdAt ASC")
     suspend fun getPendingSync(): List<DynamicSubmissionEntity>
 
+    @Query("SELECT * FROM dynamic_submissions WHERE localId = :localId LIMIT 1")
+    suspend fun getByLocalId(localId: String): DynamicSubmissionEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: DynamicSubmissionEntity): Long
 

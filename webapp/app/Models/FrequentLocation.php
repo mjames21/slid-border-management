@@ -10,6 +10,7 @@ class FrequentLocation extends Model
     use HasFactory;
 
     protected $fillable = [
+        'code',
         'country_code',
         'country_name',
         'name',

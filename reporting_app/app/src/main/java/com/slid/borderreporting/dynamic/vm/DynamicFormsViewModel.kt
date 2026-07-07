@@ -10,6 +10,7 @@ import com.slid.borderreporting.dynamic.model.RuntimeFormDefinition
 import com.slid.borderreporting.dynamic.model.RuleOperator
 import com.slid.borderreporting.dynamic.model.StoredAuthSession
 import com.slid.borderreporting.dynamic.model.StoredSubmission
+import com.slid.borderreporting.dynamic.model.SubmissionStatus
 import com.slid.borderreporting.dynamic.model.SubmissionSyncSummary
 import com.slid.borderreporting.dynamic.mrz.MrzFormat
 import com.slid.borderreporting.dynamic.mrz.ParsedMrz
@@ -33,6 +34,7 @@ data class DynamicFormsUiState(
     val isLoginPasswordVisible: Boolean = false,
     val deviceName: String = "",
     val answers: Map<String, List<String>> = emptyMap(),
+    val editingSubmissionLocalId: String? = null,
     val submissions: List<StoredSubmission> = emptyList(),
     val pendingSyncCount: Int = 0,
     val isSubmitting: Boolean = false,
@@ -46,6 +48,7 @@ class DynamicFormsViewModel(
 
     private val _uiState = MutableStateFlow(DynamicFormsUiState())
     val uiState: StateFlow<DynamicFormsUiState> = _uiState.asStateFlow()
+    private var lastSilentConfigRefreshAt: Long = 0L
 
     init {
         viewModelScope.launch {
@@ -74,6 +77,9 @@ class DynamicFormsViewModel(
         viewModelScope.launch {
             repository.observeAuthSession().collect { session ->
                 _uiState.update { it.copy(authSession = session) }
+                if (session != null) {
+                    refreshConfigSilently()
+                }
             }
         }
 
@@ -122,10 +128,21 @@ class DynamicFormsViewModel(
         viewModelScope.launch {
             try {
                 repository.refreshConfig()
-                _uiState.update { it.copy(message = "Configuration updated.") }
+                _uiState.update { it.copy(message = "Configuration updated. Latest published forms are available.") }
             } catch (e: Exception) {
                 _uiState.update { it.copy(message = e.message ?: "Configuration update failed.") }
             }
+        }
+    }
+
+    private fun refreshConfigSilently(minIntervalMs: Long = 5 * 60 * 1000L) {
+        val now = System.currentTimeMillis()
+        if (now - lastSilentConfigRefreshAt < minIntervalMs) return
+
+        lastSilentConfigRefreshAt = now
+        viewModelScope.launch {
+            runCatching { repository.refreshConfig() }
+                .onFailure { lastSilentConfigRefreshAt = 0L }
         }
     }
 
@@ -234,8 +251,9 @@ class DynamicFormsViewModel(
 
     fun saveDraft() {
         val form = _uiState.value.activeForm ?: return
+        val editingLocalId = _uiState.value.editingSubmissionLocalId
         viewModelScope.launch {
-            repository.saveDraft(form, _uiState.value.answers)
+            repository.saveDraft(form, _uiState.value.answers, editingLocalId)
             _uiState.update {
                 it.copy(
                     message = "Draft saved.",
@@ -270,15 +288,18 @@ class DynamicFormsViewModel(
             }
 
             try {
-                val localId = repository.finalizeSubmission(form, _uiState.value.answers)
+                val editingLocalId = _uiState.value.editingSubmissionLocalId
+                val localId = repository.finalizeSubmission(form, _uiState.value.answers, editingLocalId)
                 val syncResult = runCatching {
                     val deviceId = repository.storedDeviceId().ifBlank { defaultDeviceId }
                     repository.syncPending(deviceId = deviceId)
                 }
                 _uiState.update {
+                    val accepted = localId in syncResult.getOrNull()?.acceptedIds.orEmpty()
                     it.copy(
                         isSubmitting = false,
-                        answers = calculateDerivedAnswers(form),
+                        answers = if (accepted) calculateDerivedAnswers(form) else it.answers,
+                        editingSubmissionLocalId = if (accepted) null else localId,
                         validationErrors = emptyMap(),
                         message = syncResult.fold(
                             onSuccess = { summary ->
@@ -294,7 +315,7 @@ class DynamicFormsViewModel(
                                     }
 
                                     rejection != null -> {
-                                        "Submission was not sent. ${rejection.reason}"
+                                        "Submission was not sent. ${rejection.reason.toOfficerMessage(form)}"
                                     }
 
                                     summary.acceptedCount > 0 -> {
@@ -435,6 +456,7 @@ class DynamicFormsViewModel(
         viewModelScope.launch {
             try {
                 val deviceId = repository.storedDeviceId().ifBlank { defaultDeviceId }
+                runCatching { repository.refreshConfig() }
                 val summary = repository.syncPending(deviceId = deviceId)
                 _uiState.update {
                     it.copy(message = summary.toUserMessage())
@@ -444,6 +466,52 @@ class DynamicFormsViewModel(
                     it.copy(message = "Could not submit pending reports. ${e.userFacingSyncMessage(it.serverUrl)}")
                 }
             }
+        }
+    }
+
+    fun editStoredSubmission(submission: StoredSubmission) {
+        val form = _uiState.value.activeForm
+        if (form == null) {
+            _uiState.update { it.copy(message = "Download the active form before editing stored reports.") }
+            return
+        }
+
+        if (submission.formId != form.formId) {
+            _uiState.update {
+                it.copy(message = "This report belongs to ${submission.formId}. Download that active form before editing it.")
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                answers = calculateDerivedAnswers(form, submission.answers),
+                editingSubmissionLocalId = submission.localId,
+                validationErrors = emptyMap(),
+                message = when {
+                    submission.formVersion != form.version -> {
+                        "Opened an older v${submission.formVersion} report with the current v${form.version} form. Review location choices before sending."
+                    }
+
+                    submission.status == SubmissionStatus.FAILED.value -> {
+                        "Fix the rejected report and tap Finalize & Send again."
+                    }
+
+                    else -> "Stored report opened for editing."
+                }
+            )
+        }
+    }
+
+    fun startNewSubmission() {
+        val form = _uiState.value.activeForm ?: return
+        _uiState.update {
+            it.copy(
+                answers = calculateDerivedAnswers(form),
+                editingSubmissionLocalId = null,
+                validationErrors = emptyMap(),
+                message = null
+            )
         }
     }
 
@@ -567,5 +635,13 @@ class DynamicFormsViewModel(
             rawMessage.isNotBlank() -> rawMessage
             else -> "Check the server URL or network connection."
         }
+    }
+
+    private fun String.toOfficerMessage(form: RuntimeFormDefinition): String {
+        var friendly = this
+        form.fields.forEach { field ->
+            friendly = friendly.replace(field.id, field.label)
+        }
+        return friendly
     }
 }

@@ -374,9 +374,13 @@ private fun SearchableSingleSelectField(
         if (search.isBlank()) {
             options.take(8)
         } else {
-            options
+            val matches = options
                 .filter { option -> option.label.contains(search, ignoreCase = true) }
                 .take(8)
+
+            matches.ifEmpty {
+                options.firstOrNull { option -> option.value == "other" }?.let(::listOf).orEmpty()
+            }
         }
     }
 
@@ -390,6 +394,13 @@ private fun SearchableSingleSelectField(
 
     selectedLabel.takeIf { it.isNotBlank() }?.let {
         Text("Selected: $it", style = MaterialTheme.typography.bodySmall)
+    }
+
+    if (query.isNotBlank() && filteredOptions.size == 1 && filteredOptions.first().value == "other") {
+        Text(
+            "No frequent location matched. Select Other location, then type the place on the next question.",
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 
     filteredOptions.forEach { option ->

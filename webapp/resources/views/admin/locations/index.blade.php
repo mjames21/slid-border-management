@@ -18,21 +18,21 @@
 
     <div class="card">
         <h2 class="title" style="font-size: 20px;">Upload Location List</h2>
-        <p class="subtitle">Accepted formats: CSV, XLS, XLSX. Required columns: country and name. Optional columns: district, admin_area, category, aliases, sort_order.</p>
+        <p class="subtitle">Accepted formats: CSV, XLS, XLSX. Required columns: country and name. Optional columns: code, district, admin_area, category, aliases, sort_order.</p>
         <form method="POST" action="{{ route('admin.locations.store') }}" enctype="multipart/form-data" style="margin-top: 16px;">
             @csrf
             <div class="grid">
                 <div>
                     <label for="file">Location file</label>
                     <input id="file" type="file" name="file" required>
-                    <div class="field-help">Country can be SLE, Sierra Leone, GIN, Guinea, Guinea Conakry, LBR, or Liberia. District ties choices to the officer's assigned border post.</div>
+                    <div class="field-help">Country can be SLE, Sierra Leone, GIN, Guinea, Guinea Conakry, LBR, or Liberia. District ties choices to the officer's assigned border post. Use stable codes so old drafts still sync after label text changes.</div>
                 </div>
                 <div>
                     <label>Sample CSV columns</label>
-                    <div class="mono">country,name,district,admin_area,category,aliases,sort_order
-SLE,Kambia,Kambia,Kambia / Guinea corridor,town,,10
-GIN,Pamelap,Kambia,Kambia / Guinea corridor,border town,,20
-LBR,Foya,Kailahun,Kailahun / Liberia corridor,border town,,30</div>
+                    <div class="mono">code,country,name,district,admin_area,category,aliases,sort_order
+SLE-GBM-GBALAMUYA,SLE,Gbalamuya,Kambia,Kambia Guinea corridor,border post,,10
+GIN-GBM-PAMELAP,GIN,Pamelap,Kambia,Kambia Guinea corridor,border town,,20
+LBR-JDM-BO-WATERSIDE,LBR,Bo Waterside,Pujehun,Jendema Liberia corridor,border town,,30</div>
                 </div>
             </div>
             <div class="actions" style="margin-top: 16px;">
@@ -70,7 +70,7 @@ LBR,Foya,Kailahun,Kailahun / Liberia corridor,border town,,30</div>
         @endforeach
         <div class="card">
             <label>Mobile usage</label>
-            <div class="mono">Use option source locations:all or locations:COUNTRY_CODE in the form builder.</div>
+            <div class="mono">Use option source locations:all or locations:COUNTRY_CODE in the form builder. From Location and To Location share this catalog and are filtered by the officer's border-post district.</div>
         </div>
     </div>
 

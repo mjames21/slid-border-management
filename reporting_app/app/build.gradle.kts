@@ -24,11 +24,11 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://borderreach.slid.datahub.gov.sl/\"")
         }
 
         release {
-            buildConfigField("String", "API_BASE_URL", "\"https://slid-border.example.gov/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://borderreach.slid.datahub.gov.sl/\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

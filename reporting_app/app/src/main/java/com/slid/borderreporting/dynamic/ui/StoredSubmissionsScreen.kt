@@ -2,12 +2,14 @@ package com.slid.borderreporting.dynamic.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -15,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.slid.borderreporting.dynamic.model.RuntimeFormDefinition
 import com.slid.borderreporting.dynamic.model.StoredSubmission
 import com.slid.borderreporting.dynamic.vm.DynamicFormsUiState
 import java.text.SimpleDateFormat
@@ -24,6 +27,7 @@ import java.util.Locale
 @Composable
 fun StoredSubmissionsScreen(
     uiState: DynamicFormsUiState,
+    onEditSubmission: (StoredSubmission) -> Unit,
     onBack: () -> Unit
 ) {
     Column(
@@ -65,7 +69,11 @@ fun StoredSubmissionsScreen(
             }
 
             items(uiState.submissions, key = { it.localId }) { submission ->
-                SubmissionCard(submission = submission)
+                SubmissionCard(
+                    submission = submission,
+                    activeForm = uiState.activeForm,
+                    onEditSubmission = onEditSubmission
+                )
             }
         }
 
@@ -80,7 +88,9 @@ fun StoredSubmissionsScreen(
 
 @Composable
 private fun SubmissionCard(
-    submission: StoredSubmission
+    submission: StoredSubmission,
+    activeForm: RuntimeFormDefinition?,
+    onEditSubmission: (StoredSubmission) -> Unit
 ) {
     val travellerName = answerOf(
         submission = submission,
@@ -120,13 +130,33 @@ private fun SubmissionCard(
             }
             submission.syncError?.takeIf { it.isNotBlank() }?.let { reason ->
                 Text(
-                    text = "Not sent: $reason",
+                    text = "Not sent: ${reason.toOfficerMessage(activeForm)}",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
             Text("Form Version: ${submission.formVersion}")
             Text("Recorded At: ${submission.createdAt.toDisplayText()}")
+
+            if (submission.status == "draft" || submission.status == "failed") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { onEditSubmission(submission) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(if (submission.status == "failed") "Edit / Resend" else "Open Draft")
+                    }
+                    OutlinedButton(
+                        onClick = { onEditSubmission(submission) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Review")
+                    }
+                }
+            }
         }
     }
 }
@@ -152,4 +182,14 @@ private fun String.toDisplayStatus(): String {
         "failed" -> "Not sent"
         else -> replaceFirstChar { it.uppercase() }
     }
+}
+
+private fun String.toOfficerMessage(form: RuntimeFormDefinition?): String {
+    if (form == null) return this
+
+    var friendly = this
+    form.fields.forEach { field ->
+        friendly = friendly.replace(field.id, field.label)
+    }
+    return friendly
 }

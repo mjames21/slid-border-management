@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\DynamicForm;
+use App\Models\MobileSubmission;
 use App\Models\User;
 use App\Services\FormTemplateLibrary;
 use Database\Seeders\FormTemplateSeeder;
@@ -324,5 +325,73 @@ class FormBuilderTest extends TestCase
         $this->assertSame('Stable Border Form Updated', $form->title);
         $this->assertSame(2, $form->versions()->count());
         $this->assertSame(1, $form->publishedVersion->version);
+    }
+
+    public function test_admin_can_delete_operational_project_without_synced_records(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+
+        $this->actingAs($admin)->post('/admin/forms/builder', [
+            'form_id' => 'empty.project.delete',
+            'reporting_module' => DynamicForm::MODULE_SECURITY,
+            'title' => 'Empty Project Delete',
+            'publish' => '1',
+            'fields' => [[
+                'id' => 'incident_type',
+                'type' => 'text',
+                'label' => 'Incident Type',
+                'required' => '1',
+            ]],
+        ])->assertRedirect();
+
+        $form = DynamicForm::query()->where('form_id', 'empty.project.delete')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.forms.destroy', $form))
+            ->assertRedirect(route('admin.forms.index'));
+
+        $this->assertDatabaseMissing('dynamic_forms', ['id' => $form->id]);
+        $this->assertDatabaseMissing('dynamic_form_versions', ['dynamic_form_id' => $form->id]);
+    }
+
+    public function test_admin_cannot_delete_project_with_synced_records(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'is_active' => true]);
+
+        $this->actingAs($admin)->post('/admin/forms/builder', [
+            'form_id' => 'audited.project.keep',
+            'reporting_module' => DynamicForm::MODULE_IMMIGRATION,
+            'title' => 'Audited Project Keep',
+            'publish' => '1',
+            'fields' => [[
+                'id' => 'document_number',
+                'type' => 'text',
+                'label' => 'Document Number',
+                'required' => '1',
+            ]],
+        ])->assertRedirect();
+
+        $form = DynamicForm::query()->where('form_id', 'audited.project.keep')->firstOrFail();
+
+        MobileSubmission::query()->create([
+            'country_code' => 'SLE',
+            'reporting_module' => DynamicForm::MODULE_IMMIGRATION,
+            'device_id' => 'android-test',
+            'local_id' => 'local-test-1',
+            'form_id' => $form->form_id,
+            'form_version' => 1,
+            'answers' => ['document_number' => 'SLR123456'],
+            'received_at' => now(),
+            'status' => 'accepted',
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.forms.index'))
+            ->delete(route('admin.forms.destroy', $form))
+            ->assertRedirect(route('admin.forms.index'))
+            ->assertSessionHas('status', 'This project has synced records, so it was not deleted. Keep it for audit history, exports, and legal review.');
+
+        $this->assertDatabaseHas('dynamic_forms', ['id' => $form->id]);
+        $this->assertSame(1, $form->versions()->count());
     }
 }

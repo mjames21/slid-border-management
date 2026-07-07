@@ -61,7 +61,7 @@ class FormBuilderCompiler
                     $field['optionSource'] = $optionSource;
                     $options = $this->locationOptions->optionsFor($optionSource);
                     if (!$options) {
-                        $warnings[] = "Field {$id}: location catalog '{$optionSource}' has no active locations yet.";
+                        $warnings[] = "Field {$id}: option catalog '{$optionSource}' has no active options yet.";
                     }
                 } else {
                     $options = $this->parseOptions((string) ($row['options'] ?? ''), $warnings, $id);

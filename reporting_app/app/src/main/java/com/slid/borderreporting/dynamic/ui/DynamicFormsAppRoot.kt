@@ -93,7 +93,10 @@ fun DynamicFormsAppRoot(
 
         DynamicScreen.HOME -> DynamicHomeScreen(
             uiState = uiState,
-            onOpenForm = { currentScreen.value = DynamicScreen.FORM },
+            onOpenForm = {
+                viewModel.startNewSubmission()
+                currentScreen.value = DynamicScreen.FORM
+            },
             onOpenSubmissions = { currentScreen.value = DynamicScreen.SUBMISSIONS },
             onRefreshConfig = viewModel::refreshConfig,
             onSyncPending = { viewModel.syncPending(defaultDeviceName) },
@@ -126,6 +129,10 @@ fun DynamicFormsAppRoot(
 
         DynamicScreen.SUBMISSIONS -> StoredSubmissionsScreen(
             uiState = uiState,
+            onEditSubmission = { submission ->
+                viewModel.editStoredSubmission(submission)
+                currentScreen.value = DynamicScreen.FORM
+            },
             onBack = { currentScreen.value = DynamicScreen.HOME }
         )
     }

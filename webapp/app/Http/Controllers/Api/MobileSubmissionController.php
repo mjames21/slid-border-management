@@ -83,6 +83,7 @@ class MobileSubmissionController extends Controller
 
                 continue;
             }
+            $answers = $validator->normalizeAnswers($version, $answers);
 
             $existingSubmission = MobileSubmission::query()
                 ->where('device_id', $deviceId)

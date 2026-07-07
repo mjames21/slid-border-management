@@ -18,11 +18,18 @@ class AdminLocationController extends Controller
 {
     use ResolvesTenantScope;
 
-    public function index(Request $request): View
+    public function index(Request $request, LocationOptionCatalog $catalog): View
     {
-        $selectedCountry = $this->selectedCountryCode($request);
+        $allowedCountries = $request->user()?->canManageAllTenants()
+            ? null
+            : $catalog->expandAllowedCountryCodes([$request->user()?->tenantCountryCode()]);
+        $requestedCountry = strtoupper(trim((string) $request->query('country_code', '')));
+        $selectedCountry = $requestedCountry !== '' && ($allowedCountries === null || in_array($requestedCountry, $allowedCountries, true))
+            ? $requestedCountry
+            : null;
 
         $locations = FrequentLocation::query()
+            ->when($allowedCountries !== null, fn ($query) => $query->whereIn('country_code', $allowedCountries))
             ->when($selectedCountry, fn ($query) => $query->where('country_code', $selectedCountry))
             ->orderBy('country_code')
             ->orderBy('sort_order')
@@ -32,15 +39,22 @@ class AdminLocationController extends Controller
 
         $counts = FrequentLocation::query()
             ->where('is_active', true)
+            ->when($allowedCountries !== null, fn ($query) => $query->whereIn('country_code', $allowedCountries))
             ->when($selectedCountry, fn ($query) => $query->where('country_code', $selectedCountry))
             ->selectRaw('country_code, count(*) as total')
             ->groupBy('country_code')
             ->pluck('total', 'country_code');
 
+        $countries = Country::query()
+            ->when($allowedCountries !== null, fn ($query) => $query->whereIn('code', $allowedCountries))
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
         return view('admin.locations.index', [
             'locations' => $locations,
             'counts' => $counts,
-            'countries' => $this->countriesForUser($request),
+            'countries' => $countries,
             'filters' => ['country_code' => $selectedCountry],
         ]);
     }

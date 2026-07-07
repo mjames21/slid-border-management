@@ -39,7 +39,16 @@
                 </div>
                 <div>
                     <label for="region">Region</label>
-                    <input id="region" name="region" type="text" value="{{ old('region', $borderPost->region) }}">
+                    <select id="region" name="region">
+                        <option value="">Select region / district</option>
+                        @foreach($regionOptions as $group => $options)
+                            <optgroup label="{{ $group }}">
+                                @foreach($options as $option)
+                                    <option value="{{ $option }}" @selected(old('region', $borderPost->region) === $option)>{{ $option }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label for="longitude">Longitude</label>

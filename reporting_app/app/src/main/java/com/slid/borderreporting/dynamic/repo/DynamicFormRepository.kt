@@ -216,16 +216,18 @@ class DynamicFormRepository(
 
     suspend fun saveDraft(
         form: RuntimeFormDefinition,
-        answers: Map<String, List<String>>
+        answers: Map<String, List<String>>,
+        existingLocalId: String? = null
     ) {
-        saveLocalSubmission(form, answers, SubmissionStatus.DRAFT)
+        saveLocalSubmission(form, answers, SubmissionStatus.DRAFT, existingLocalId)
     }
 
     suspend fun finalizeSubmission(
         form: RuntimeFormDefinition,
-        answers: Map<String, List<String>>
+        answers: Map<String, List<String>>,
+        existingLocalId: String? = null
     ): String {
-        return saveLocalSubmission(form, answers, SubmissionStatus.PENDING_SYNC)
+        return saveLocalSubmission(form, answers, SubmissionStatus.PENDING_SYNC, existingLocalId)
     }
 
     suspend fun syncPending(deviceId: String): SubmissionSyncSummary {
@@ -366,13 +368,15 @@ class DynamicFormRepository(
     private suspend fun saveLocalSubmission(
         form: RuntimeFormDefinition,
         answers: Map<String, List<String>>,
-        status: SubmissionStatus
+        status: SubmissionStatus,
+        existingLocalId: String? = null
     ): String {
         val now = System.currentTimeMillis()
         val deviceLocation = locationProvider?.currentLocation()
-        val localId = UUID.randomUUID().toString()
+        val existing = existingLocalId?.let { submissionDao.getByLocalId(it) }
+        val localId = existing?.localId ?: UUID.randomUUID().toString()
         submissionDao.upsert(
-            DynamicSubmissionEntity(
+            (existing ?: DynamicSubmissionEntity(
                 localId = localId,
                 formId = form.formId,
                 formVersion = form.version,
@@ -384,6 +388,19 @@ class DynamicFormRepository(
                 deviceLongitude = deviceLocation?.longitude,
                 deviceLocationAccuracyMeters = deviceLocation?.accuracyMeters,
                 deviceLocationCapturedAt = deviceLocation?.capturedAt
+            )).copy(
+                formId = form.formId,
+                formVersion = form.version,
+                answersJson = AnswerCodec.encode(answers),
+                status = status.value,
+                updatedAt = now,
+                deviceLatitude = deviceLocation?.latitude ?: existing?.deviceLatitude,
+                deviceLongitude = deviceLocation?.longitude ?: existing?.deviceLongitude,
+                deviceLocationAccuracyMeters = deviceLocation?.accuracyMeters ?: existing?.deviceLocationAccuracyMeters,
+                deviceLocationCapturedAt = deviceLocation?.capturedAt ?: existing?.deviceLocationCapturedAt,
+                syncError = null,
+                serverId = null,
+                serverReceivedAt = null
             )
         )
         return localId
@@ -420,9 +437,8 @@ class DynamicFormRepository(
     class SubmissionSyncException(message: String, cause: Throwable) : Exception(message, cause)
 
     private suspend fun upsertForms(config: MobileConfigResponse) {
-        if (config.activeForms.isEmpty()) return
-
         formDao.deactivateAll()
+        if (config.activeForms.isEmpty()) return
 
         config.activeForms.forEach { form ->
             val encoded = json.encodeToString(RuntimeFormDefinition.serializer(), form)

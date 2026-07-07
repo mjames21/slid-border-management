@@ -300,6 +300,46 @@ class AdminFormController extends Controller
         return back()->with('status', "Version {$version} published.");
     }
 
+    public function destroy(Request $request, DynamicForm $form, AuditLogger $audit): RedirectResponse
+    {
+        if ($form->is_template) {
+            return back()->with('status', 'Built-in templates are protected. Clone a template before changing or deleting an operational project.');
+        }
+
+        $this->assertCanAccessRecordCountry($request, $form);
+
+        $submissionCount = MobileSubmission::query()
+            ->where('country_code', $form->country_code)
+            ->where('form_id', $form->form_id)
+            ->count();
+
+        if ($submissionCount > 0) {
+            return back()->with(
+                'status',
+                'This project has synced records, so it was not deleted. Keep it for audit history, exports, and legal review.'
+            );
+        }
+
+        $metadata = [
+            'form_id' => $form->form_id,
+            'country_code' => $form->country_code,
+            'title' => $form->title,
+            'versions' => $form->versions()->count(),
+        ];
+
+        DB::transaction(function () use ($form): void {
+            $form->forceFill(['published_version_id' => null])->save();
+            $form->versions()->delete();
+            $form->delete();
+        });
+
+        $audit->record('admin.form_deleted', $request->user(), metadata: $metadata, request: $request);
+
+        return redirect()
+            ->route('admin.forms.index')
+            ->with('status', 'Project deleted. No synced records were attached to it.');
+    }
+
     private function publishVersion(DynamicForm $form, DynamicFormVersion $version): void
     {
         $form->versions()->update(['is_published' => false]);

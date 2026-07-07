@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DynamicFormVersion;
+use Illuminate\Support\Str;
 
 class MobileSubmissionValidator
 {
@@ -37,6 +38,31 @@ class MobileSubmissionValidator
         return $errors;
     }
 
+    public function normalizeAnswers(DynamicFormVersion $version, array $answers): array
+    {
+        $schema = $version->compiled_schema;
+
+        foreach ($schema['fields'] ?? [] as $field) {
+            $id = $field['id'] ?? null;
+            if (! $id || ! array_key_exists($id, $answers) || ! in_array($field['type'] ?? null, ['select_one', 'select_multiple'], true)) {
+                continue;
+            }
+
+            $original = $answers[$id];
+            $values = is_array($original) ? $original : [$original];
+            $normalized = [];
+
+            foreach ($values as $value) {
+                $value = (string) $value;
+                $normalized[] = $this->normalizeChoice($field, $value, $schema) ?? $value;
+            }
+
+            $answers[$id] = is_array($original) ? $normalized : ($normalized[0] ?? $original);
+        }
+
+        return $answers;
+    }
+
     private function validateValue(array $field, mixed $value, array $schema): array
     {
         $id = $field['id'] ?? 'field';
@@ -54,11 +80,74 @@ class MobileSubmissionValidator
 
     private function validateChoice(array $field, string $value, array $schema): array
     {
-        $listName = $field['listName'] ?? null;
-        $choices = $field['options'] ?? ($schema['choiceLists'][$listName] ?? []);
-        $allowed = array_column($choices, 'value');
+        if ($this->normalizeChoice($field, $value, $schema) !== null) {
+            return [];
+        }
 
-        return in_array($value, $allowed, true) ? [] : [($field['id'] ?? 'field')." has an invalid choice."];
+        return [($field['label'] ?? $field['id'] ?? 'field').' has an invalid choice.'];
+    }
+
+    private function normalizeChoice(array $field, string $value, array $schema): ?string
+    {
+        $choices = $this->choicesFor($field, $schema);
+        $value = trim($value);
+
+        foreach ($choices as $choice) {
+            $choiceValue = (string) ($choice['value'] ?? '');
+            if ($choiceValue === $value) {
+                return $choiceValue;
+            }
+        }
+
+        foreach ($choices as $choice) {
+            $choiceValue = (string) ($choice['value'] ?? '');
+            $choiceLabel = (string) ($choice['label'] ?? '');
+
+            if (strcasecmp($choiceValue, $value) === 0 || strcasecmp($choiceLabel, $value) === 0) {
+                return $choiceValue;
+            }
+        }
+
+        if (! $this->isLocationChoice($field)) {
+            return null;
+        }
+
+        $fingerprint = $this->choiceFingerprint($value);
+        foreach ($choices as $choice) {
+            $choiceValue = (string) ($choice['value'] ?? '');
+            $choiceLabel = (string) ($choice['label'] ?? '');
+
+            if (
+                $fingerprint !== ''
+                && ($fingerprint === $this->choiceFingerprint($choiceValue) || $fingerprint === $this->choiceFingerprint($choiceLabel))
+            ) {
+                return $choiceValue;
+            }
+        }
+
+        return null;
+    }
+
+    private function choicesFor(array $field, array $schema): array
+    {
+        $listName = $field['listName'] ?? null;
+
+        return $field['options'] ?? ($schema['choiceLists'][$listName] ?? []);
+    }
+
+    private function isLocationChoice(array $field): bool
+    {
+        $id = (string) ($field['id'] ?? '');
+        $optionSource = (string) ($field['optionSource'] ?? $field['option_source'] ?? '');
+
+        return str_starts_with($optionSource, 'locations:')
+            || in_array($id, ['origin_location', 'destination_location'], true)
+            || Str::endsWith($id, '_location');
+    }
+
+    private function choiceFingerprint(string $value): string
+    {
+        return Str::lower((string) preg_replace('/[^A-Za-z0-9]+/', '', $value));
     }
 
     private function isVisible(array $field, array $answers): bool

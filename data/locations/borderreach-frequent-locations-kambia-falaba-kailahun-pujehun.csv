@@ -1,57 +1,58 @@
-country,name,district,admin_area,category,aliases,sort_order
-SLE,Gbalamuya,Kambia,Kambia / Guinea corridor,border post,"Gbalamuya Border Post;Gbalamuya Crossing;Gbalamuya-Kambia",10
-SLE,Kambia,Kambia,Kambia / Guinea corridor,district hub,"Kambia Town;Kambia District",11
-SLE,Kukuna,Kambia,Kambia / Guinea corridor,nearby town,"Kukuna Town;Kukuna Chiefdom",12
-SLE,Rokupr,Kambia,Kambia / Guinea corridor,nearby town,"Rokupr Town",13
-SLE,Mambolo,Kambia,Kambia / Guinea corridor,nearby town,"Mambolo Town",14
-SLE,Samaya,Kambia,Kambia / Guinea corridor,nearby town,"Samaya Village;Samaya Crossing",15
-SLE,Mange,Kambia,Kambia / Guinea corridor,nearby town,"Mange Town",16
-GIN,Pamelap,Kambia,Kambia / Guinea corridor,border town,"Pamalap;Pamelap Border;Pamelap Guinea",20
-GIN,Forecariah,Kambia,Kambia / Guinea corridor,prefecture hub,"Forecariah Town;Forécariah",21
-GIN,Farmoriah,Kambia,Kambia / Guinea corridor,nearby town,"Farmoriah Guinea",22
-GIN,Benty,Kambia,Kambia / Guinea corridor,coastal town,"Benty Guinea",23
-GIN,Kindia,Kambia,Kambia / Guinea corridor,regional hub,"Kindia Guinea",24
-GIN,Conakry,Kambia,Kambia / Guinea corridor,capital,"Conakry;Guinea Conakry",25
-SLE,Falaba,Falaba,Falaba / Guinea corridor,district hub,"Falaba Town;Falaba District",100
-SLE,Bendugu,Falaba,Falaba / Guinea corridor,nearby town,"Bendugu Falaba;Mongo Bendugu",101
-SLE,Mongo,Falaba,Falaba / Guinea corridor,nearby town,"Mongo Town;Mongo Bendugu",102
-SLE,Musaia,Falaba,Falaba / Guinea corridor,nearby town,"Musaia Town",103
-SLE,Sinkunia,Falaba,Falaba / Guinea corridor,nearby town,"Sinkunia Town",104
-SLE,Kabala,Falaba,Falaba / Guinea corridor,regional hub,"Kabala Town;Koinadugu",105
-SLE,Fadugu,Falaba,Falaba / Guinea corridor,nearby town,"Fadugu Town",106
-GIN,Faranah,Falaba,Falaba / Guinea corridor,regional hub,"Faranah Guinea",120
-GIN,Kissidougou,Falaba,Falaba / Guinea corridor,regional hub,"Kissidougou Guinea",121
-GIN,Dabola,Falaba,Falaba / Guinea corridor,regional hub,"Dabola Guinea",122
-GIN,Nongoa,Falaba,Falaba / Guinea corridor,border area,"Nongoa Guinea",123
-GIN,Gueckedou,Falaba,Falaba / Guinea corridor,regional hub,"Gueckedou;Guéckédou",124
-SLE,Kailahun,Kailahun,Kailahun / Guinea-Liberia corridor,district hub,"Kailahun Town;Kailahun District",200
-SLE,Koindu,Kailahun,Kailahun / Guinea corridor,border town,"Koindu Town;Koindu Border;Kailahun-Guinea",201
-SLE,Yenga,Kailahun,Kailahun / Guinea corridor,border area,"Yenga;Yenga Triangle",202
-SLE,Buedu,Kailahun,Kailahun / Guinea-Liberia corridor,nearby town,"Buedu Town",203
-SLE,Pendembu,Kailahun,Kailahun / Liberia corridor,nearby town,"Pendembu Town",204
-SLE,Daru,Kailahun,Kailahun / Liberia corridor,nearby town,"Daru Town",205
-SLE,Segbwema,Kailahun,Kailahun / Liberia corridor,nearby town,"Segbwema Town",206
-SLE,Koidu,Kailahun,Kailahun / Guinea corridor,regional hub,"Koidu Town;Kono",207
-GIN,Gueckedou,Kailahun,Kailahun / Guinea corridor,regional hub,"Gueckedou;Guéckédou;Kailahun-Guinea",220
-GIN,Kissidougou,Kailahun,Kailahun / Guinea corridor,regional hub,"Kissidougou Guinea",221
-GIN,Macenta,Kailahun,Kailahun / Guinea corridor,regional hub,"Macenta Guinea",222
-GIN,Nzerekore,Kailahun,Kailahun / Guinea corridor,regional hub,"Nzerekore;N'Zerekore;N'Zérékoré",223
-GIN,Nongoa,Kailahun,Kailahun / Guinea corridor,border area,"Nongoa Guinea",224
-LBR,Foya,Kailahun,Kailahun / Liberia corridor,border town,"Foya Liberia;Foya District",240
-LBR,Voinjama,Kailahun,Kailahun / Liberia corridor,county hub,"Voinjama;Lofa County",241
-LBR,Kolahun,Kailahun,Kailahun / Liberia corridor,nearby town,"Kolahun Liberia",242
-LBR,Vahun,Kailahun,Kailahun / Liberia corridor,border town,"Vahun Liberia",243
-LBR,Monrovia,Kailahun,Kailahun / Liberia corridor,capital,"Monrovia Liberia",244
-SLE,Jendema,Pujehun,Pujehun / Liberia corridor,border post,"Jendema Border Post;Jendema Crossing;Jendema-Pujehun",300
-SLE,Zimmi,Pujehun,Pujehun / Liberia corridor,nearby town,"Zimmi Town",301
-SLE,Pujehun,Pujehun,Pujehun / Liberia corridor,district hub,"Pujehun Town;Pujehun District",302
-SLE,Potoru,Pujehun,Pujehun / Liberia corridor,nearby town,"Potoru Town",303
-SLE,Gendema,Pujehun,Pujehun / Liberia corridor,nearby town,"Gendema;Gendema Village",304
-SLE,Sulima,Pujehun,Pujehun / Liberia corridor,coastal town,"Sulima Town",305
-SLE,Bo,Pujehun,Pujehun / Liberia corridor,regional hub,"Bo City",306
-LBR,Bo Waterside,Pujehun,Pujehun / Liberia corridor,border town,"Bo Waterside Border;Bo-Waterside;Bo Waterside Liberia",320
-LBR,Sinje,Pujehun,Pujehun / Liberia corridor,nearby town,"Sinje Liberia;Sinje Town",321
-LBR,Robertsport,Pujehun,Pujehun / Liberia corridor,county hub,"Robertsport;Grand Cape Mount",322
-LBR,Tienii,Pujehun,Pujehun / Liberia corridor,nearby town,"Tienii;Tieni",323
-LBR,Tubmanburg,Pujehun,Pujehun / Liberia corridor,regional hub,"Tubmanburg;Bomi County",324
-LBR,Monrovia,Pujehun,Pujehun / Liberia corridor,capital,"Monrovia Liberia",325
+code,country,name,district,admin_area,category,aliases,sort_order
+SLE-LOC-GBALAMUYA,SLE,Gbalamuya,Kambia,Kambia Guinea corridor,border post,"Gbalamuya Border Post;Gbalamuya Crossing;Gbalamuya-Kambia",10
+SLE-LOC-KAMBIA,SLE,Kambia,Kambia,Kambia Guinea corridor,district hub,"Kambia Town;Kambia District",11
+SLE-LOC-KUKUNA,SLE,Kukuna,Kambia,Kambia Guinea corridor,nearby town,"Kukuna Town;Kukuna Chiefdom",12
+SLE-LOC-ROKUPR,SLE,Rokupr,Kambia,Kambia Guinea corridor,nearby town,"Rokupr Town",13
+SLE-LOC-MAMBOLO,SLE,Mambolo,Kambia,Kambia Guinea corridor,nearby town,"Mambolo Town",14
+SLE-LOC-SAMAYA,SLE,Samaya,Kambia,Kambia Guinea corridor,nearby town,"Samaya Village;Samaya Crossing",15
+SLE-LOC-MANGE,SLE,Mange,Kambia,Kambia Guinea corridor,nearby town,"Mange Town",16
+GIN-LOC-PAMELAP,GIN,Pamelap,Kambia,Kambia Guinea corridor,border town,"Pamalap;Pamelap Border;Pamelap Guinea",20
+GIN-LOC-FORECARIAH,GIN,Forecariah,Kambia,Kambia Guinea corridor,prefecture hub,"Forecariah Town;Forécariah",21
+GIN-LOC-FARMORIAH,GIN,Farmoriah,Kambia,Kambia Guinea corridor,nearby town,"Farmoriah Guinea",22
+GIN-LOC-BENTY,GIN,Benty,Kambia,Kambia Guinea corridor,coastal town,"Benty Guinea",23
+GIN-LOC-KINDIA,GIN,Kindia,Kambia,Kambia Guinea corridor,regional hub,"Kindia Guinea",24
+GIN-LOC-CONAKRY,GIN,Conakry,Kambia,Kambia Guinea corridor,capital,"Conakry;Guinea Conakry",25
+SLE-LOC-FALABA,SLE,Falaba,Falaba,Falaba Guinea corridor,district hub,"Falaba Town;Falaba District",100
+SLE-LOC-KOINUKURA,SLE,Koinukura,Falaba,Falaba Guinea corridor,border post,"Koinukura;Koinukura Border Post;Koinukura Falaba",101
+SLE-LOC-BENDUGU,SLE,Bendugu,Falaba,Falaba Guinea corridor,nearby town,"Bendugu Falaba;Mongo Bendugu",102
+SLE-LOC-MONGO,SLE,Mongo,Falaba,Falaba Guinea corridor,nearby town,"Mongo Town;Mongo Bendugu",103
+SLE-LOC-MUSAIA,SLE,Musaia,Falaba,Falaba Guinea corridor,nearby town,"Musaia Town",104
+SLE-LOC-SINKUNIA,SLE,Sinkunia,Falaba,Falaba Guinea corridor,nearby town,"Sinkunia Town",105
+SLE-LOC-KABALA,SLE,Kabala,Falaba,Falaba Guinea corridor,regional hub,"Kabala Town;Koinadugu",106
+SLE-LOC-FADUGU,SLE,Fadugu,Falaba,Falaba Guinea corridor,nearby town,"Fadugu Town",107
+GIN-LOC-FARANAH,GIN,Faranah,Falaba,Falaba Guinea corridor,regional hub,"Faranah Guinea",120
+GIN-LOC-KISSIDOUGOU-FALABA,GIN,Kissidougou,Falaba,Falaba Guinea corridor,regional hub,"Kissidougou Guinea",121
+GIN-LOC-DABOLA,GIN,Dabola,Falaba,Falaba Guinea corridor,regional hub,"Dabola Guinea",122
+GIN-LOC-NONGOA-FALABA,GIN,Nongoa,Falaba,Falaba Guinea corridor,border area,"Nongoa Guinea",123
+GIN-LOC-GUECKEDOU-FALABA,GIN,Gueckedou,Falaba,Falaba Guinea corridor,regional hub,"Gueckedou;Guéckédou",124
+SLE-LOC-KAILAHUN,SLE,Kailahun,Kailahun,Kailahun Guinea Liberia corridor,district hub,"Kailahun Town;Kailahun District",200
+SLE-LOC-KOINDU,SLE,Koindu,Kailahun,Kailahun Guinea corridor,border town,"Koindu Town;Koindu Border;Kailahun-Guinea",201
+SLE-LOC-YENGA,SLE,Yenga,Kailahun,Kailahun Guinea corridor,border area,"Yenga;Yenga Triangle",202
+SLE-LOC-BUEDU,SLE,Buedu,Kailahun,Kailahun Guinea Liberia corridor,nearby town,"Buedu Town",203
+SLE-LOC-PENDEMBU,SLE,Pendembu,Kailahun,Kailahun Liberia corridor,nearby town,"Pendembu Town",204
+SLE-LOC-DARU,SLE,Daru,Kailahun,Kailahun Liberia corridor,nearby town,"Daru Town",205
+SLE-LOC-SEGBWEMA,SLE,Segbwema,Kailahun,Kailahun Liberia corridor,nearby town,"Segbwema Town",206
+SLE-LOC-KOIDU,SLE,Koidu,Kailahun,Kailahun Guinea corridor,regional hub,"Koidu Town;Kono",207
+GIN-LOC-GUECKEDOU-KAILAHUN,GIN,Gueckedou,Kailahun,Kailahun Guinea corridor,regional hub,"Gueckedou;Guéckédou;Kailahun-Guinea",220
+GIN-LOC-KISSIDOUGOU-KAILAHUN,GIN,Kissidougou,Kailahun,Kailahun Guinea corridor,regional hub,"Kissidougou Guinea",221
+GIN-LOC-MACENTA,GIN,Macenta,Kailahun,Kailahun Guinea corridor,regional hub,"Macenta Guinea",222
+GIN-LOC-NZEREKORE,GIN,Nzerekore,Kailahun,Kailahun Guinea corridor,regional hub,"Nzerekore;N'Zerekore;N'Zérékoré",223
+GIN-LOC-NONGOA-KAILAHUN,GIN,Nongoa,Kailahun,Kailahun Guinea corridor,border area,"Nongoa Guinea",224
+LBR-LOC-FOYA,LBR,Foya,Kailahun,Kailahun Liberia corridor,border town,"Foya Liberia;Foya District",240
+LBR-LOC-VOINJAMA,LBR,Voinjama,Kailahun,Kailahun Liberia corridor,county hub,"Voinjama;Lofa County",241
+LBR-LOC-KOLAHUN,LBR,Kolahun,Kailahun,Kailahun Liberia corridor,nearby town,"Kolahun Liberia",242
+LBR-LOC-VAHUN,LBR,Vahun,Kailahun,Kailahun Liberia corridor,border town,"Vahun Liberia",243
+LBR-LOC-MONROVIA-KAILAHUN,LBR,Monrovia,Kailahun,Kailahun Liberia corridor,capital,"Monrovia Liberia",244
+SLE-LOC-JENDEMA,SLE,Jendema,Pujehun,Pujehun Liberia corridor,border post,"Jendema Border Post;Jendema Crossing;Jendema-Pujehun",300
+SLE-LOC-ZIMMI,SLE,Zimmi,Pujehun,Pujehun Liberia corridor,nearby town,"Zimmi Town",301
+SLE-LOC-PUJEHUN,SLE,Pujehun,Pujehun,Pujehun Liberia corridor,district hub,"Pujehun Town;Pujehun District",302
+SLE-LOC-POTORU,SLE,Potoru,Pujehun,Pujehun Liberia corridor,nearby town,"Potoru Town",303
+SLE-LOC-GENDEMA,SLE,Gendema,Pujehun,Pujehun Liberia corridor,nearby town,"Gendema;Gendema Village",304
+SLE-LOC-SULIMA,SLE,Sulima,Pujehun,Pujehun Liberia corridor,coastal town,"Sulima Town",305
+SLE-LOC-BO,SLE,Bo,Pujehun,Pujehun Liberia corridor,regional hub,"Bo City",306
+LBR-LOC-BO-WATERSIDE,LBR,Bo Waterside,Pujehun,Pujehun Liberia corridor,border town,"Bo Waterside Border;Bo-Waterside;Bo Waterside Liberia",320
+LBR-LOC-SINJE,LBR,Sinje,Pujehun,Pujehun Liberia corridor,nearby town,"Sinje Liberia;Sinje Town",321
+LBR-LOC-ROBERTSPORT,LBR,Robertsport,Pujehun,Pujehun Liberia corridor,county hub,"Robertsport;Grand Cape Mount",322
+LBR-LOC-TIENII,LBR,Tienii,Pujehun,Pujehun Liberia corridor,nearby town,"Tienii;Tieni",323
+LBR-LOC-TUBMANBURG,LBR,Tubmanburg,Pujehun,Pujehun Liberia corridor,regional hub,"Tubmanburg;Bomi County",324
+LBR-LOC-MONROVIA-PUJEHUN,LBR,Monrovia,Pujehun,Pujehun Liberia corridor,capital,"Monrovia Liberia",325

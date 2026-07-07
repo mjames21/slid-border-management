@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Concerns\ResolvesTenantScope;
 use App\Http\Controllers\Controller;
 use App\Models\BorderPost;
-use App\Models\Country;
 use App\Services\AuditLogger;
+use App\Services\BorderRegionCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -16,6 +16,10 @@ use Illuminate\View\View;
 class AdminBorderPostController extends Controller
 {
     use ResolvesTenantScope;
+
+    public function __construct(private readonly BorderRegionCatalog $regions)
+    {
+    }
 
     public function index(Request $request): View
     {
@@ -41,6 +45,7 @@ class AdminBorderPostController extends Controller
         return view('admin.border-posts.form', [
             'borderPost' => new BorderPost(['is_active' => true, 'allowed_radius_meters' => 250]),
             'countries' => $this->countriesForUser($request),
+            'regionOptions' => $this->regionOptions(),
         ]);
     }
 
@@ -67,6 +72,7 @@ class AdminBorderPostController extends Controller
         return view('admin.border-posts.form', [
             'borderPost' => $borderPost,
             'countries' => $this->countriesForUser($request),
+            'regionOptions' => $this->regionOptions($borderPost),
         ]);
     }
 
@@ -104,7 +110,7 @@ class AdminBorderPostController extends Controller
                 Rule::unique('border_posts', 'digital_address')->ignore($borderPost),
             ],
             'name' => ['required', 'string', 'max:255'],
-            'region' => ['nullable', 'string', 'max:255'],
+            'region' => ['nullable', 'string', 'max:255', Rule::in($this->regionValues($borderPost))],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'allowed_radius_meters' => ['nullable', 'integer', 'min:1', 'max:50000'],
@@ -139,4 +145,20 @@ class AdminBorderPostController extends Controller
         return Str::upper(Str::slug($address, '-'));
     }
 
+    private function regionOptions(?BorderPost $borderPost = null): array
+    {
+        $options = $this->regions->options();
+        $current = trim((string) $borderPost?->region);
+
+        if ($current !== '' && !in_array($current, $this->regions->values(), true)) {
+            $options['Existing custom value'] = [$current];
+        }
+
+        return $options;
+    }
+
+    private function regionValues(?BorderPost $borderPost = null): array
+    {
+        return collect($this->regionOptions($borderPost))->flatten()->values()->all();
+    }
 }
