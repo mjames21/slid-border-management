@@ -611,7 +611,7 @@
                         Share the country, agency, expected scope, and preferred environment. The BorderReach team will prepare the right setup path.
                     </p>
                     <p>
-                        Email: <a href="mailto:border.reach.onboarding@memeh.org">border.reach.onboarding@memeh.org</a>
+                        Email: <a href="mailto:onboarding@borderreach.memeh.org">onboarding@borderreach.memeh.org</a>
                     </p>
                 </div>
                 <form class="form-panel" method="POST" action="{{ route('deployment-requests.store') }}">
@@ -687,7 +687,7 @@
     <footer class="footer">
         <div class="shell footer-inner">
             <span>BorderReach. Standardized border reporting for difficult operating environments.</span>
-            <a href="mailto:border.reach.onboarding@memeh.org">border.reach.onboarding@memeh.org</a>
+            <a href="mailto:onboarding@borderreach.memeh.org">onboarding@borderreach.memeh.org</a>
         </div>
     </footer>
 </body>

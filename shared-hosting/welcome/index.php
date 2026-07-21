@@ -1,5 +1,5 @@
 <?php
-$to = 'border.reach.onboarding@memeh.org';
+$to = 'onboarding@borderreach.memeh.org';
 $sent = false;
 $errors = [];
 
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sent = mail($to, $subject, $body, implode("\r\n", $headers));
 
             if (!$sent) {
-                $errors[] = 'The message could not be sent. Please email border.reach.onboarding@memeh.org directly.';
+                $errors[] = 'The message could not be sent. Please email onboarding@borderreach.memeh.org directly.';
             }
         }
     }
@@ -715,7 +715,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p class="eyebrow" style="color: var(--green-dark)">Deployment review</p>
                 <h2>Tell us about the deployment.</h2>
                 <p>Share the country, agency, expected scope, and preferred hosting environment. The BorderReach onboarding team can prepare the right setup path from there.</p>
-                <p>Direct email: <a class="email-link" href="mailto:border.reach.onboarding@memeh.org">border.reach.onboarding@memeh.org</a></p>
+                <p>Direct email: <a class="email-link" href="mailto:onboarding@borderreach.memeh.org">onboarding@borderreach.memeh.org</a></p>
             </div>
             <form method="post" action="#deployment">
                 <input class="hidden" type="text" name="website" value="" tabindex="-1" autocomplete="off">

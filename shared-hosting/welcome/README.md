@@ -23,12 +23,12 @@ If both `index.php` and `index.html` exist, most PHP hosting setups load `index.
 
 Both versions use this onboarding address:
 
-`border.reach.onboarding@memeh.org`
+`onboarding@borderreach.memeh.org`
 
 The PHP page sends deployment requests from the server. The recipient is configured near the top of `index.php`:
 
 ```php
-$to = 'border.reach.onboarding@memeh.org';
+$to = 'onboarding@borderreach.memeh.org';
 ```
 
 The host must support PHP `mail()` or a working sendmail/SMTP bridge. If mail is disabled on the host, the page will show an error and the requester can email the address directly.
@@ -36,7 +36,7 @@ The host must support PHP `mail()` or a working sendmail/SMTP bridge. If mail is
 The static Tailwind page uses a standard email handoff:
 
 ```html
-mailto:border.reach.onboarding@memeh.org
+mailto:onboarding@borderreach.memeh.org
 ```
 
 Use `index.html` when the site is only a brochure page, and use `index.php` when deployment requests should submit through SiteGround.

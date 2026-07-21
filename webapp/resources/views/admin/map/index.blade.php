@@ -3,6 +3,7 @@
 @section('content')
     <style>
         .map-page-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}.map-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.map-controls>div{min-width:180px}.map-shell{border:1px solid #dce3ee;background:#fff}.map-stage{height:640px;min-height:420px;padding:14px}.report-map-svg{width:100%;height:100%;border:1px solid #dbe3ea;border-radius:8px;background:#eef6f3}.report-map-boundary{fill:#d9f2e5;stroke:#0f766e;stroke-width:1.5;fill-rule:evenodd}.report-map-point{cursor:pointer;stroke:#fff;stroke-width:1.5}.report-map-point.accepted{fill:#2563eb}.report-map-point.rejected,.report-map-point.failed{fill:#dc2626}.report-map-point.selected{stroke:#111827;stroke-width:2.5}.map-side{display:grid;gap:14px;align-content:start}.map-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.map-stat{border:1px solid #dce3ee;background:#fff;padding:13px}.map-stat label{margin:0;color:#64748b}.map-stat strong{display:block;margin-top:5px;color:#1f2937;font-size:24px;line-height:1}.map-report-list{max-height:420px;overflow:auto}.map-report-item{display:block;border-bottom:1px solid #e5e7eb;color:#1f2937;text-decoration:none;padding:11px 0}.map-report-item:hover,.map-report-item.selected{background:#f8fafc}.map-report-item strong{display:block}.map-report-item span{display:block;color:#64748b;font-size:12px;margin-top:2px}.map-empty{color:#64748b;padding:24px;text-align:center}.map-empty strong{display:block;color:#1f2937;margin-bottom:6px}.map-detail-row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;border-bottom:1px solid #eef2f6;padding:8px 0}.map-detail-row dt{color:#64748b;font-weight:800}.map-detail-row dd{margin:0;word-break:break-word}.legend{display:flex;gap:12px;flex-wrap:wrap;color:#64748b;font-size:12px}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:999px;background:#2563eb}.legend .review i{background:#dc2626}.map-config-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-bottom:18px}.map-config-card{border:1px solid #dce3ee;background:#fff;padding:16px}.map-config-card h3{margin:0 0 6px;color:#1f2937;font-size:17px}.map-config-card p{margin:0 0 12px;color:#64748b;line-height:1.45}.compact-upload{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}.compact-upload input[type=file]{padding:10px;background:#f8fafc}.upload-progress{display:none;margin-top:12px;border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;padding:12px}.upload-progress.active{display:block}.upload-progress strong{display:flex;align-items:center;gap:8px;margin-bottom:8px}.spinner{width:16px;height:16px;border:2px solid #bbf7d0;border-top-color:#15803d;border-radius:999px;animation:spin .8s linear infinite}.upload-bar{height:8px;overflow:hidden;border-radius:999px;background:#d1fae5}.upload-bar span{display:block;width:42%;height:100%;border-radius:999px;background:#15803d;animation:progress-slide 1.1s ease-in-out infinite}button.is-loading{cursor:wait;opacity:.8}@keyframes spin{to{transform:rotate(360deg)}}@keyframes progress-slide{0%{transform:translateX(-110%)}100%{transform:translateX(250%)}}@media(max-width:1100px){.map-page-grid,.map-config-grid{grid-template-columns:1fr}.map-side{grid-template-columns:repeat(2,minmax(0,1fr))}.map-side .panel{min-width:0}}@media(max-width:720px){.map-controls,.map-page-grid,.map-side,.map-stat-grid,.compact-upload{grid-template-columns:1fr}.map-stage{height:460px;padding:10px}.map-detail-row{grid-template-columns:1fr}}
+        .report-map-cluster{cursor:pointer}.report-map-cluster circle{fill:#047857;stroke:#fff;stroke-width:2}.report-map-cluster.selected circle{stroke:#111827;stroke-width:3}.report-map-cluster text{fill:#fff;font-weight:900;font-size:12px;pointer-events:none}.map-stack-list{display:grid;gap:8px;margin:12px 0}.map-stack-list>strong{color:#1f2937}.map-stack-item{display:block;border:1px solid #dce3ee;border-radius:7px;padding:9px 10px;color:#1f2937;text-decoration:none;background:#f8fafc}.map-stack-item:hover,.map-stack-item.selected{border-color:#0f766e;background:#ecfdf5}.map-stack-item strong{display:block}.map-stack-item span{display:block;color:#64748b;font-size:12px;margin-top:2px}
     </style>
 
     <div id="report-map-page"
@@ -250,18 +251,20 @@
                     ? `${data.country.name} boundary with ${data.points.length} GPS report(s)${windowLabel}.${simplifiedNote}`
                     : 'No boundary uploaded yet. Use Map Boundary Configuration above to upload GeoJSON or a zipped shapefile.';
 
-                renderSvg(data);
+                const pointGroups = renderSvg(data);
                 renderList(data.points || []);
-                renderSelected((data.points || []).find(point => point.id === state.selectedId) || null);
+                const selectedPoint = (data.points || []).find(point => point.id === state.selectedId) || null;
+                const selectedGroup = (pointGroups || []).find(group => group.points.some(point => point.id === state.selectedId)) || null;
+                renderSelected(selectedPoint, selectedGroup);
             }
 
             function renderSvg(data) {
                 clear(svg);
-                const points = data.points || [];
-                const coordinates = collectCoordinates(data.boundary).concat(points.map(point => [point.longitude, point.latitude]));
+                const points = (data.points || []).filter(point => Number.isFinite(Number(point.longitude)) && Number.isFinite(Number(point.latitude)));
+                const coordinates = collectCoordinates(data.boundary).concat(points.map(point => [Number(point.longitude), Number(point.latitude)]));
                 if (!coordinates.length) {
                     svg.innerHTML = '<text x="500" y="295" text-anchor="middle" fill="#1f2937" font-weight="700">No map data yet</text><text x="500" y="322" text-anchor="middle" fill="#64748b">Upload a country boundary and sync reports with GPS coordinates.</text>';
-                    return;
+                    return [];
                 }
 
                 const bounds = computeBounds(coordinates);
@@ -277,23 +280,90 @@
                     svg.appendChild(path);
                 });
 
-                points.forEach(point => {
-                    if (point.longitude === null || point.latitude === null) return;
-                    const [x, y] = project([point.longitude, point.latitude]);
-                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    circle.setAttribute('cx', x);
-                    circle.setAttribute('cy', y);
-                    circle.setAttribute('r', point.id === state.selectedId ? 8 : 5);
-                    circle.setAttribute('class', `report-map-point ${point.status || 'accepted'} ${point.id === state.selectedId ? 'selected' : ''}`);
-                    circle.addEventListener('click', () => {
-                        state.selectedId = point.id;
-                        render();
-                    });
-                    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-                    title.textContent = `${point.borderPostCode || 'Unknown post'} / ${point.formId || 'Unknown form'}`;
-                    circle.appendChild(title);
-                    svg.appendChild(circle);
+                const pointGroups = buildPointGroups(points, project);
+                pointGroups.forEach(group => {
+                    if (group.points.length > 1) {
+                        drawReportCluster(group);
+                        return;
+                    }
+
+                    drawReportPoint(group.points[0], group.x, group.y);
                 });
+
+                return pointGroups;
+            }
+
+            function buildPointGroups(points, project) {
+                const groups = new Map();
+
+                points.forEach(point => {
+                    const [x, y] = project([Number(point.longitude), Number(point.latitude)]);
+                    const postKey = point.borderPostDigitalAddress || point.borderPostCode;
+                    const geoBucket = `${Math.round(x / 16)}:${Math.round(y / 16)}`;
+                    const key = postKey ? `post:${postKey}` : `geo:${geoBucket}`;
+
+                    if (!groups.has(key)) {
+                        groups.set(key, { key, x: 0, y: 0, points: [] });
+                    }
+
+                    const group = groups.get(key);
+                    group.points.push(point);
+                    group.x += x;
+                    group.y += y;
+                });
+
+                return Array.from(groups.values()).map(group => ({
+                    key: group.key,
+                    x: group.x / group.points.length,
+                    y: group.y / group.points.length,
+                    points: group.points.sort((a, b) => String(b.receivedAt || '').localeCompare(String(a.receivedAt || ''))),
+                }));
+            }
+
+            function drawReportPoint(point, x, y) {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', point.id === state.selectedId ? 8 : 5);
+                circle.setAttribute('class', `report-map-point ${point.status || 'accepted'} ${point.id === state.selectedId ? 'selected' : ''}`);
+                circle.addEventListener('click', () => {
+                    state.selectedId = point.id;
+                    render();
+                });
+
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${point.borderPostCode || 'Unknown post'} / ${point.formId || 'Unknown form'}`;
+                circle.appendChild(title);
+                svg.appendChild(circle);
+            }
+
+            function drawReportCluster(group) {
+                const isSelected = group.points.some(point => point.id === state.selectedId);
+                const cluster = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                cluster.setAttribute('class', `report-map-cluster ${isSelected ? 'selected' : ''}`);
+                cluster.addEventListener('click', () => {
+                    state.selectedId = group.points[0].id;
+                    render();
+                });
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', group.x);
+                circle.setAttribute('cy', group.y);
+                circle.setAttribute('r', group.points.length > 9 ? 13 : 11);
+
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${group.points.length} reports at ${group.points[0].borderPostCode || 'this location'}`;
+
+                const count = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                count.setAttribute('x', group.x);
+                count.setAttribute('y', group.y + 4);
+                count.setAttribute('text-anchor', 'middle');
+                count.textContent = group.points.length > 99 ? '99+' : String(group.points.length);
+
+                cluster.appendChild(title);
+                cluster.appendChild(circle);
+                cluster.appendChild(count);
+                svg.appendChild(cluster);
             }
 
             function renderList(points) {
@@ -320,12 +390,24 @@
                 });
             }
 
-            function renderSelected(point) {
+            function renderSelected(point, group = null) {
                 const target = document.getElementById('map-selected-report');
                 if (!point) {
                     target.innerHTML = '<div class="map-empty">No report selected.</div>';
                     return;
                 }
+
+                const stack = group && group.points && group.points.length > 1 ? `
+                    <div class="map-stack-list">
+                        <strong>${escapeHtml(group.points.length)} reports at this post/location</strong>
+                        ${group.points.map(stackedPoint => `
+                            <a class="map-stack-item ${stackedPoint.id === point.id ? 'selected' : ''}" href="/admin/submissions/${stackedPoint.id}">
+                                <strong>#${escapeHtml(stackedPoint.id)} ${escapeHtml(stackedPoint.borderPostCode || 'No post')}</strong>
+                                <span>${escapeHtml(stackedPoint.reportingModuleLabel || stackedPoint.reportingModule || 'Report')} - ${escapeHtml(stackedPoint.receivedAt || '')}</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                ` : '';
 
                 target.innerHTML = `
                     <dl>
@@ -339,6 +421,7 @@
                         ${detailRow('Device', point.deviceId || '-')}
                         ${detailRow('Received', point.receivedAt || '-')}
                     </dl>
+                    ${stack}
                     <a class="tool-button primary" href="/admin/submissions/${point.id}">Open report</a>
                 `;
             }
