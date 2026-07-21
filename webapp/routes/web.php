@@ -23,6 +23,12 @@ Route::middleware(SecurityHeaders::class)->group(function () {
         ->middleware('throttle:5,1')
         ->name('deployment-requests.store');
 
+    Route::match(['get', 'post'], '/register', function () {
+        return redirect()
+            ->route('login')
+            ->with('status', 'Public registration is disabled. Administrators create user accounts.');
+    })->middleware('throttle:10,1')->name('register.disabled');
+
     Route::get('/logout', [AdminAuthController::class, 'logout'])
         ->middleware('auth')
         ->name('logout.get');

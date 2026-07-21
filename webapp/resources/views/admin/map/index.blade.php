@@ -82,6 +82,13 @@
                         <option value="24" selected>Last 24 hours</option>
                         <option value="72">Last 3 days</option>
                         <option value="168">Last 7 days</option>
+                        <option value="this_month">This month</option>
+                        <option value="last_month">Last month</option>
+                        <option value="last_3_months">Last 3 months</option>
+                        <option value="last_6_months">Last 6 months</option>
+                        <option value="this_year">This year</option>
+                        <option value="last_year">Last year</option>
+                        <option value="all">All records</option>
                     </select>
                 </div>
                 <div style="flex:1;min-width:260px;">
@@ -238,8 +245,9 @@
                 document.getElementById('map-boundary-status').textContent = data.country?.hasBoundary ? 'Boundary loaded' : 'No boundary uploaded';
                 document.getElementById('map-point-status').textContent = `${data.points?.length || 0} plotted`;
                 const simplifiedNote = data.boundaryMeta?.simplified ? ' Optimized for fast display.' : '';
+                const windowLabel = data.window?.label ? ` (${data.window.label})` : '';
                 document.getElementById('map-subtitle').textContent = data.country?.hasBoundary
-                    ? `${data.country.name} boundary with ${data.points.length} GPS report(s).${simplifiedNote}`
+                    ? `${data.country.name} boundary with ${data.points.length} GPS report(s)${windowLabel}.${simplifiedNote}`
                     : 'No boundary uploaded yet. Use Map Boundary Configuration above to upload GeoJSON or a zipped shapefile.';
 
                 renderSvg(data);

@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BorderReach is standardized border reporting software for offline field operations, synced review, maps, exports, and analysis.">
+  <title>BorderReach | Standardized Border Reporting</title>
+  <link rel="icon" href="assets/borderreach-mark.svg" type="image/svg+xml">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            borderreach: {
+              green: '#08794f',
+              dark: '#263247',
+              ink: '#172033',
+              muted: '#5b6b82',
+              line: '#d9e3ee',
+              wash: '#f4f7fb'
+            }
+          },
+          boxShadow: {
+            soft: '0 18px 48px rgba(20, 35, 55, 0.14)'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-white text-borderreach-ink antialiased">
+  <header class="sticky top-0 z-40 border-b border-borderreach-line bg-white/95 backdrop-blur">
+    <div class="mx-auto flex min-h-20 w-[min(1160px,calc(100%-40px))] items-center justify-between gap-6">
+      <a href="#top" class="flex items-center" aria-label="BorderReach home">
+        <img src="assets/borderreach-logo.svg" alt="BorderReach" class="h-11 w-auto">
+      </a>
+      <nav class="hidden items-center gap-7 text-sm font-extrabold text-borderreach-dark md:flex">
+        <a href="#product" class="hover:text-borderreach-green">Product</a>
+        <a href="#standards" class="hover:text-borderreach-green">Standards</a>
+        <a href="#deployment" class="hover:text-borderreach-green">Deployment</a>
+        <a href="#contact" class="hover:text-borderreach-green">Contact</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <a href="#contact" class="rounded-lg bg-borderreach-green px-4 py-3 text-sm font-extrabold text-white shadow-soft hover:bg-emerald-800">Request review</a>
+    </div>
+  </div>
+</header>
+
+  <main id="top">
+    <section class="relative min-h-[640px] bg-cover bg-center text-white" style="background-image: linear-gradient(90deg, rgba(6,27,42,.84), rgba(6,27,42,.48) 48%, rgba(6,27,42,.12)), url('assets/borderreach-remote-border-road.png');">
+      <div class="mx-auto flex min-h-[640px] w-[min(1160px,calc(100%-40px))] items-center">
+        <div class="max-w-3xl py-20">
+          <p class="mb-4 text-xs font-black uppercase tracking-widest text-emerald-100">Offline-first border operations</p>
+          <h1 class="text-5xl font-black leading-[0.96] tracking-normal sm:text-6xl lg:text-8xl">Standardized border reporting that keeps working offline.</h1>
+          <p class="mt-6 max-w-2xl text-xl font-extrabold leading-snug text-white sm:text-2xl">Report from remote border posts, preserve structured records, and sync clean data for review, maps, exports, and analysis when connectivity returns.</p>
+          <p class="mt-5 max-w-2xl text-base font-medium leading-7 text-slate-100">BorderReach supports immigration, customs, health, and security reporting from one controlled workspace.</p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="#contact" class="rounded-lg bg-borderreach-green px-5 py-3 font-extrabold text-white shadow-soft hover:bg-emerald-800">Request deployment review</a>
+            <a href="#product" class="rounded-lg border border-white/70 bg-white/10 px-5 py-3 font-extrabold text-white hover:bg-white/20">Explore product</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="product" class="border-b border-borderreach-line bg-white">
+      <div class="mx-auto grid w-[min(1160px,calc(100%-40px))] gap-px py-8 md:grid-cols-3 lg:grid-cols-6">
+        <div class="border-borderreach-line py-4 md:border-r">
+          <p class="font-black">Offline reporting</p>
+          <p class="mt-1 text-sm font-semibold text-borderreach-muted">Capture first. Sync later.</p>
+        </div>
+        <div class="border-borderreach-line py-4 md:border-r md:pl-6">
+          <p class="font-black">Standards-backed forms</p>
+          <p class="mt-1 text-sm font-semibold text-borderreach-muted">ICAO, WCO, WHO, incidents.</p>
+        </div>
+        <div class="border-borderreach-line py-4 md:border-r md:pl-6">
+          <p class="font-black">Location aware</p>
+          <p class="mt-1 text-sm font-semibold text-borderreach-muted">Post, GPS, boundary context.</p>
+        </div>
+        <div class="border-borderreach-line py-4 md:border-r md:pl-6">
+          <p class="font-black">Secure custody</p>
+          <p class="mt-1 text-sm font-semibold text-borderreach-muted">User, device, post, timestamp.</p>
+        </div>
+        <div class="border-borderreach-line py-4 md:border-r md:pl-6">
+          <p class="font-black">Analysis</p>
+          <p class="mt-1 text-sm font-semibold text-borderreach-muted">Tables, maps, exports, APIs.</p>
+        </div>
+        <div class="py-4 md:pl-6">
+          <p class="font-black">Single window</p>
+          <p class="mt-1 text-sm font-semibold text-borderreach-muted">One channel for agencies.</p>
+        </div>
+    </div>
+  </section>
+
+  <section class="border-b border-borderreach-line bg-white">
+    <div class="mx-auto flex w-[min(1160px,calc(100%-40px))] flex-col gap-6 py-10 md:flex-row md:items-center md:justify-between">
+      <div class="max-w-3xl">
+        <p class="text-xs font-black uppercase tracking-widest text-borderreach-green">Operational use case</p>
+        <h2 class="mt-2 text-2xl font-black tracking-normal text-borderreach-ink">Used by Sierra Leone Immigration Service for border management.</h2>
+        <p class="mt-3 text-base font-semibold leading-7 text-borderreach-muted">Sierra Leone Immigration Service is using BorderReach to support standardized border reporting, officer assignment, GPS context, and synced operational review across border posts.</p>
+      </div>
+      <div class="flex shrink-0 items-center gap-4 rounded-xl border border-borderreach-line bg-borderreach-wash px-5 py-4">
+        <img src="assets/sierra-leone-immigration-logo.png" alt="Sierra Leone Immigration Service logo" class="h-16 w-16 object-contain">
+        <div>
+          <p class="text-sm font-black text-borderreach-ink">Sierra Leone Immigration Service</p>
+          <p class="text-sm font-semibold text-borderreach-muted">Border management deployment</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-borderreach-wash py-16">
+      <div class="mx-auto grid w-[min(1160px,calc(100%-40px))] gap-8 lg:grid-cols-[1fr_.86fr]">
+        <div>
+          <p class="text-xs font-black uppercase tracking-widest text-borderreach-green">Built for operational posts</p>
+          <h2 class="mt-3 text-4xl font-black leading-tight tracking-normal sm:text-5xl">A field reporting workspace for hard-to-reach borders.</h2>
+          <p class="mt-5 max-w-3xl text-lg font-medium leading-8 text-borderreach-muted">BorderReach gives national border agencies a controlled way to publish forms, enroll officers, receive structured reports, review records, and visualize activity even when posts have unreliable connectivity.</p>
+          <div class="mt-8 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-lg border border-borderreach-line bg-white p-5">
+              <p class="font-black">Form versioning</p>
+              <p class="mt-2 text-sm font-semibold leading-6 text-borderreach-muted">Publish controlled updates and keep field devices aligned with the latest approved version.</p>
+            </div>
+            <div class="rounded-lg border border-borderreach-line bg-white p-5">
+              <p class="font-black">Review-ready records</p>
+              <p class="mt-2 text-sm font-semibold leading-6 text-borderreach-muted">Store answers as structured JSON while showing report tables that officers and managers can understand.</p>
+            </div>
+            <div class="rounded-lg border border-borderreach-line bg-white p-5">
+              <p class="font-black">Operational maps</p>
+              <p class="mt-2 text-sm font-semibold leading-6 text-borderreach-muted">Upload boundary layers and plot GPS reports against districts, chiefdoms, posts, or field locations.</p>
+            </div>
+            <div class="rounded-lg border border-borderreach-line bg-white p-5">
+              <p class="font-black">External integrations</p>
+              <p class="mt-2 text-sm font-semibold leading-6 text-borderreach-muted">Forward accepted submissions to downstream systems through REST webhooks and exports.</p>
+            </div>
+          </div>
+        </div>
+        <img src="assets/borderreach-customs-post.png" alt="Remote border post" class="h-full min-h-[420px] w-full rounded-xl object-cover shadow-soft">
+      </div>
+    </section>
+
+    <section id="standards" class="bg-white py-16">
+      <div class="mx-auto w-[min(1160px,calc(100%-40px))]">
+        <div class="max-w-3xl">
+          <p class="text-xs font-black uppercase tracking-widest text-borderreach-green">Standards and templates</p>
+          <h2 class="mt-3 text-4xl font-black tracking-normal">Start from proven reporting baselines.</h2>
+          <p class="mt-4 text-lg font-medium leading-8 text-borderreach-muted">Templates give agencies a disciplined starting point. Each project can be copied, adapted, versioned, and published for field use.</p>
+        </div>
+        <div class="mt-8 grid gap-5 md:grid-cols-2">
+          <article class="rounded-lg border border-borderreach-line p-6">
+            <h3 class="text-xl font-black">ICAO Doc 9303 immigration template</h3>
+            <p class="mt-3 font-medium leading-7 text-borderreach-muted">Machine-readable travel document reporting, VIZ/MRZ checks, document validity, traveller identity, inspection observations, and officer decision fields.</p>
+          </article>
+          <article class="rounded-lg border border-borderreach-line p-6">
+            <h3 class="text-xl font-black">WCO Data Model customs template</h3>
+            <p class="mt-3 font-medium leading-7 text-borderreach-muted">Declaration, procedure, goods, HS code, transport, consignor, consignee, duty, inspection result, and seizure workflow fields.</p>
+          </article>
+          <article class="rounded-lg border border-borderreach-line p-6">
+            <h3 class="text-xl font-black">WHO IHR point-of-entry health template</h3>
+            <p class="mt-3 font-medium leading-7 text-borderreach-muted">Screening, symptoms, exposure risk, vaccination or prophylaxis document, public health action, referral, and notification fields.</p>
+          </article>
+          <article class="rounded-lg border border-borderreach-line p-6">
+            <h3 class="text-xl font-black">Security incident template</h3>
+            <p class="mt-3 font-medium leading-7 text-borderreach-muted">Incident type, severity, detection source, action taken, agency notification, evidence, and follow-up ownership.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="deployment" class="border-y border-borderreach-line bg-borderreach-wash py-16">
+      <div class="mx-auto w-[min(1160px,calc(100%-40px))]">
+        <div class="max-w-3xl">
+          <p class="text-xs font-black uppercase tracking-widest text-borderreach-green">Deployment options</p>
+          <h2 class="mt-3 text-4xl font-black tracking-normal">Choose the operating model that fits the agency.</h2>
+        </div>
+        <div class="mt-8 grid gap-5 md:grid-cols-2">
+          <div class="rounded-lg border border-borderreach-line bg-white p-7">
+            <h3 class="text-2xl font-black">Managed workspace</h3>
+            <p class="mt-3 font-medium leading-7 text-borderreach-muted">A ready BorderReach environment with country-scoped projects, users, forms, mobile setup, dashboards, exports, and maps managed from one secure workspace.</p>
+          </div>
+          <div class="rounded-lg border border-borderreach-line bg-white p-7">
+            <h3 class="text-2xl font-black">Private government deployment</h3>
+            <p class="mt-3 font-medium leading-7 text-borderreach-muted">For ministries or national border agencies that need private cloud, on-premise, or hybrid deployment with their own domain, data controls, and rollout plan.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="bg-white py-16">
+      <div class="mx-auto grid w-[min(1160px,calc(100%-40px))] gap-8 lg:grid-cols-[.78fr_1fr]">
+        <div>
+          <p class="text-xs font-black uppercase tracking-widest text-borderreach-green">Onboarding</p>
+          <h2 class="mt-3 text-4xl font-black tracking-normal">Request a deployment review.</h2>
+          <p class="mt-4 text-lg font-medium leading-8 text-borderreach-muted">Share the country, agency, expected scope, and preferred environment. The BorderReach onboarding team will prepare the right setup path.</p>
+          <p class="mt-6 rounded-lg border border-borderreach-line bg-borderreach-wash p-4 text-sm font-bold leading-6 text-borderreach-muted">
+            Deployment reviews cover operating model, data governance, hosting environment, and rollout readiness.
+          </p>
+          <p class="mt-5 text-sm font-bold text-borderreach-muted">Email: <a class="text-borderreach-green underline" href="mailto:border.reach.onboarding@memeh.org">border.reach.onboarding@memeh.org</a></p>
+        </div>
+        <form action="mailto:border.reach.onboarding@memeh.org?subject=BorderReach%20deployment%20request" method="post" enctype="text/plain" class="rounded-xl border border-borderreach-line bg-white p-7 shadow-soft">
+          <div class="grid gap-5 sm:grid-cols-2">
+            <label class="grid gap-2 text-sm font-black">Country
+              <input name="Country" list="country-options" required class="min-h-12 rounded-lg border border-borderreach-line px-4 text-base font-medium outline-none focus:border-borderreach-green" autocomplete="country-name" placeholder="Start typing a country">
+            </label>
+            <label class="grid gap-2 text-sm font-black">Agency
+              <input name="Agency" required class="min-h-12 rounded-lg border border-borderreach-line px-4 text-base font-medium outline-none focus:border-borderreach-green">
+            </label>
+            <label class="grid gap-2 text-sm font-black">Contact name
+              <input name="Contact name" required class="min-h-12 rounded-lg border border-borderreach-line px-4 text-base font-medium outline-none focus:border-borderreach-green" autocomplete="name">
+            </label>
+            <label class="grid gap-2 text-sm font-black">Work email
+              <input name="Work email" type="email" required class="min-h-12 rounded-lg border border-borderreach-line px-4 text-base font-medium outline-none focus:border-borderreach-green" autocomplete="email">
+            </label>
+            <label class="grid gap-2 text-sm font-black">Phone
+              <input name="Phone" class="min-h-12 rounded-lg border border-borderreach-line px-4 text-base font-medium outline-none focus:border-borderreach-green" autocomplete="tel">
+            </label>
+            <label class="grid gap-2 text-sm font-black">Environment
+              <select name="Environment" class="min-h-12 rounded-lg border border-borderreach-line px-4 text-base font-medium outline-none focus:border-borderreach-green">
+                <option>Managed hosted workspace</option>
+                <option>Private cloud</option>
+                <option>On-premise</option>
+                <option>Hybrid</option>
+              </select>
+            </label>
+          </div>
+          <datalist id="country-options">
+            <option value="Afghanistan"></option>
+            <option value="Albania"></option>
+            <option value="Algeria"></option>
+            <option value="Andorra"></option>
+            <option value="Angola"></option>
+            <option value="Antigua and Barbuda"></option>
+            <option value="Argentina"></option>
+            <option value="Armenia"></option>
+            <option value="Australia"></option>
+            <option value="Austria"></option>
+            <option value="Azerbaijan"></option>
+            <option value="Bahamas"></option>
+            <option value="Bahrain"></option>
+            <option value="Bangladesh"></option>
+            <option value="Barbados"></option>
+            <option value="Belarus"></option>
+            <option value="Belgium"></option>
+            <option value="Belize"></option>
+            <option value="Benin"></option>
+            <option value="Bhutan"></option>
+            <option value="Bolivia"></option>
+            <option value="Bosnia and Herzegovina"></option>
+            <option value="Botswana"></option>
+            <option value="Brazil"></option>
+            <option value="Brunei"></option>
+            <option value="Bulgaria"></option>
+            <option value="Burkina Faso"></option>
+            <option value="Burundi"></option>
+            <option value="Cabo Verde"></option>
+            <option value="Cambodia"></option>
+            <option value="Cameroon"></option>
+            <option value="Canada"></option>
+            <option value="Central African Republic"></option>
+            <option value="Chad"></option>
+            <option value="Chile"></option>
+            <option value="China"></option>
+            <option value="Colombia"></option>
+            <option value="Comoros"></option>
+            <option value="Congo"></option>
+            <option value="Costa Rica"></option>
+            <option value="Cote d'Ivoire"></option>
+            <option value="Croatia"></option>
+            <option value="Cuba"></option>
+            <option value="Cyprus"></option>
+            <option value="Czechia"></option>
+            <option value="Democratic Republic of the Congo"></option>
+            <option value="Denmark"></option>
+            <option value="Djibouti"></option>
+            <option value="Dominica"></option>
+            <option value="Dominican Republic"></option>
+            <option value="Ecuador"></option>
+            <option value="Egypt"></option>
+            <option value="El Salvador"></option>
+            <option value="Equatorial Guinea"></option>
+            <option value="Eritrea"></option>
+            <option value="Estonia"></option>
+            <option value="Eswatini"></option>
+            <option value="Ethiopia"></option>
+            <option value="Fiji"></option>
+            <option value="Finland"></option>
+            <option value="France"></option>
+            <option value="Gabon"></option>
+            <option value="Gambia"></option>
+            <option value="Georgia"></option>
+            <option value="Germany"></option>
+            <option value="Ghana"></option>
+            <option value="Greece"></option>
+            <option value="Grenada"></option>
+            <option value="Guatemala"></option>
+            <option value="Guinea"></option>
+            <option value="Guinea (Conakry)"></option>
+            <option value="Guinea-Bissau"></option>
+            <option value="Guyana"></option>
+            <option value="Haiti"></option>
+            <option value="Honduras"></option>
+            <option value="Hungary"></option>
+            <option value="Iceland"></option>
+            <option value="India"></option>
+            <option value="Indonesia"></option>
+            <option value="Iran"></option>
+            <option value="Iraq"></option>
+            <option value="Ireland"></option>
+            <option value="Israel"></option>
+            <option value="Italy"></option>
+            <option value="Jamaica"></option>
+            <option value="Japan"></option>
+            <option value="Jordan"></option>
+            <option value="Kazakhstan"></option>
+            <option value="Kenya"></option>
+            <option value="Kiribati"></option>
+            <option value="Kosovo"></option>
+            <option value="Kuwait"></option>
+            <option value="Kyrgyzstan"></option>
+            <option value="Laos"></option>
+            <option value="Latvia"></option>
+            <option value="Lebanon"></option>
+            <option value="Lesotho"></option>
+            <option value="Liberia"></option>
+            <option value="Libya"></option>
+            <option value="Liechtenstein"></option>
+            <option value="Lithuania"></option>
+            <option value="Luxembourg"></option>
+            <option value="Madagascar"></option>
+            <option value="Malawi"></option>
+            <option value="Malaysia"></option>
+            <option value="Maldives"></option>
+            <option value="Mali"></option>
+            <option value="Malta"></option>
+            <option value="Marshall Islands"></option>
+            <option value="Mauritania"></option>
+            <option value="Mauritius"></option>
+            <option value="Mexico"></option>
+            <option value="Micronesia"></option>
+            <option value="Moldova"></option>
+            <option value="Monaco"></option>
+            <option value="Mongolia"></option>
+            <option value="Montenegro"></option>
+            <option value="Morocco"></option>
+            <option value="Mozambique"></option>
+            <option value="Myanmar"></option>
+            <option value="Namibia"></option>
+            <option value="Nauru"></option>
+            <option value="Nepal"></option>
+            <option value="Netherlands"></option>
+            <option value="New Zealand"></option>
+            <option value="Nicaragua"></option>
+            <option value="Niger"></option>
+            <option value="Nigeria"></option>
+            <option value="North Korea"></option>
+            <option value="North Macedonia"></option>
+            <option value="Norway"></option>
+            <option value="Oman"></option>
+            <option value="Pakistan"></option>
+            <option value="Palau"></option>
+            <option value="Palestine"></option>
+            <option value="Panama"></option>
+            <option value="Papua New Guinea"></option>
+            <option value="Paraguay"></option>
+            <option value="Peru"></option>
+            <option value="Philippines"></option>
+            <option value="Poland"></option>
+            <option value="Portugal"></option>
+            <option value="Qatar"></option>
+            <option value="Romania"></option>
+            <option value="Russia"></option>
+            <option value="Rwanda"></option>
+            <option value="Saint Kitts and Nevis"></option>
+            <option value="Saint Lucia"></option>
+            <option value="Saint Vincent and the Grenadines"></option>
+            <option value="Samoa"></option>
+            <option value="San Marino"></option>
+            <option value="Sao Tome and Principe"></option>
+            <option value="Saudi Arabia"></option>
+            <option value="Senegal"></option>
+            <option value="Serbia"></option>
+            <option value="Seychelles"></option>
+            <option value="Sierra Leone"></option>
+            <option value="Singapore"></option>
+            <option value="Slovakia"></option>
+            <option value="Slovenia"></option>
+            <option value="Solomon Islands"></option>
+            <option value="Somalia"></option>
+            <option value="South Africa"></option>
+            <option value="South Korea"></option>
+            <option value="South Sudan"></option>
+            <option value="Spain"></option>
+            <option value="Sri Lanka"></option>
+            <option value="Sudan"></option>
+            <option value="Suriname"></option>
+            <option value="Sweden"></option>
+            <option value="Switzerland"></option>
+            <option value="Syria"></option>
+            <option value="Taiwan"></option>
+            <option value="Tajikistan"></option>
+            <option value="Tanzania"></option>
+            <option value="Thailand"></option>
+            <option value="Timor-Leste"></option>
+            <option value="Togo"></option>
+            <option value="Tonga"></option>
+            <option value="Trinidad and Tobago"></option>
+            <option value="Tunisia"></option>
+            <option value="Turkey"></option>
+            <option value="Turkmenistan"></option>
+            <option value="Tuvalu"></option>
+            <option value="Uganda"></option>
+            <option value="Ukraine"></option>
+            <option value="United Arab Emirates"></option>
+            <option value="United Kingdom"></option>
+            <option value="United States"></option>
+            <option value="Uruguay"></option>
+            <option value="Uzbekistan"></option>
+            <option value="Vanuatu"></option>
+            <option value="Vatican City"></option>
+            <option value="Venezuela"></option>
+            <option value="Vietnam"></option>
+            <option value="Yemen"></option>
+            <option value="Zambia"></option>
+            <option value="Zimbabwe"></option>
+          </datalist>
+          <fieldset class="mt-5">
+            <legend class="text-sm font-black">Reporting modules</legend>
+            <div class="mt-3 grid gap-3 sm:grid-cols-4">
+              <label class="flex items-center gap-2 rounded-lg border border-borderreach-line px-3 py-3 text-sm font-extrabold"><input type="checkbox" name="Modules" value="Immigration" checked> Immigration</label>
+              <label class="flex items-center gap-2 rounded-lg border border-borderreach-line px-3 py-3 text-sm font-extrabold"><input type="checkbox" name="Modules" value="Customs"> Customs</label>
+              <label class="flex items-center gap-2 rounded-lg border border-borderreach-line px-3 py-3 text-sm font-extrabold"><input type="checkbox" name="Modules" value="Health"> Health</label>
+              <label class="flex items-center gap-2 rounded-lg border border-borderreach-line px-3 py-3 text-sm font-extrabold"><input type="checkbox" name="Modules" value="Security"> Security</label>
+            </div>
+          </fieldset>
+          <label class="mt-5 grid gap-2 text-sm font-black">Deployment notes
+            <textarea name="Deployment notes" rows="5" class="rounded-lg border border-borderreach-line px-4 py-3 text-base font-medium outline-none focus:border-borderreach-green"></textarea>
+          </label>
+          <button type="submit" class="mt-6 rounded-lg bg-borderreach-green px-5 py-3 font-extrabold text-white shadow-soft hover:bg-emerald-800">Send request</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-borderreach-line bg-borderreach-dark py-8 text-white">
+    <div class="mx-auto flex w-[min(1160px,calc(100%-40px))] flex-col justify-between gap-4 text-sm font-bold sm:flex-row">
+      <p>BorderReach</p>
+      <p><a href="mailto:border.reach.onboarding@memeh.org" class="text-emerald-100">border.reach.onboarding@memeh.org</a></p>
+    </div>
+  </footer>
+</body>
+</html>

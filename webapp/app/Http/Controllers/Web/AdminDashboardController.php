@@ -38,12 +38,13 @@ class AdminDashboardController extends Controller
         $countryCode = $this->defaultCountryCode($request);
         $country = $this->countryQueryForUser($request)->find($countryCode)
             ?: $this->countryQueryForUser($request)->first();
-        $hours = max(1, min(168, (int) $request->query('hours', 24)));
+        $window = $this->resolveDashboardWindow($request->query('hours', 24));
+        $hours = $window['hours'];
         $filters = $this->normalizeFilters($request->query('filters', []));
         $search = substr(trim((string) $request->query('q', '')), 0, 120);
         $mapOnly = $request->query('view') === 'map';
 
-        $baseQuery = $this->filteredSubmissionQuery($country?->code, now()->subHours($hours), $filters);
+        $baseQuery = $this->filteredSubmissionQuery($country?->code, $window['from'], $filters, $window['to']);
         $this->applyDiscoverSearch($baseQuery, $search);
         $total = (clone $baseQuery)->count();
         $withLocation = (clone $baseQuery)->whereNotNull('device_latitude')->whereNotNull('device_longitude')->count();
@@ -105,6 +106,12 @@ class AdminDashboardController extends Controller
                 'hasBoundary' => $country?->boundary_geojson_path !== null,
             ],
             'windowHours' => $hours,
+            'window' => [
+                'key' => $window['key'],
+                'label' => $window['label'],
+                'from' => $window['from']?->toIso8601String(),
+                'to' => $window['to']?->toIso8601String(),
+            ],
             'filters' => $filters,
             'query' => $search,
             'filterOptions' => $this->filterOptions($country),
@@ -188,11 +195,94 @@ class AdminDashboardController extends Controller
         ]);
     }
 
-    private function filteredSubmissionQuery(?string $countryCode, mixed $receivedSince, array $filters): Builder
+    private function resolveDashboardWindow(mixed $rawWindow): array
+    {
+        $key = is_string($rawWindow) ? trim($rawWindow) : (string) $rawWindow;
+        $now = now();
+
+        $window = match ($key) {
+            'this_month' => [
+                'key' => 'this_month',
+                'label' => 'This month',
+                'from' => $now->copy()->startOfMonth(),
+                'to' => null,
+            ],
+            'last_month' => [
+                'key' => 'last_month',
+                'label' => 'Last month',
+                'from' => $now->copy()->subMonthNoOverflow()->startOfMonth(),
+                'to' => $now->copy()->subMonthNoOverflow()->endOfMonth(),
+            ],
+            'last_3_months' => [
+                'key' => 'last_3_months',
+                'label' => 'Last 3 months',
+                'from' => $now->copy()->subMonthsNoOverflow(3),
+                'to' => null,
+            ],
+            'last_6_months' => [
+                'key' => 'last_6_months',
+                'label' => 'Last 6 months',
+                'from' => $now->copy()->subMonthsNoOverflow(6),
+                'to' => null,
+            ],
+            'this_year' => [
+                'key' => 'this_year',
+                'label' => 'This year',
+                'from' => $now->copy()->startOfYear(),
+                'to' => null,
+            ],
+            'last_year' => [
+                'key' => 'last_year',
+                'label' => 'Last year',
+                'from' => $now->copy()->subYearNoOverflow()->startOfYear(),
+                'to' => $now->copy()->subYearNoOverflow()->endOfYear(),
+            ],
+            'all' => [
+                'key' => 'all',
+                'label' => 'All records',
+                'from' => null,
+                'to' => null,
+            ],
+            default => null,
+        };
+
+        if ($window === null) {
+            $numericHours = (int) $key;
+            $hours = max(1, min(8760, $numericHours > 0 ? $numericHours : 24));
+
+            return [
+                'key' => (string) $hours,
+                'label' => $this->hourWindowLabel($hours),
+                'from' => $now->copy()->subHours($hours),
+                'to' => null,
+                'hours' => $hours,
+            ];
+        }
+
+        $window['hours'] = $window['from']
+            ? max(1, (int) ceil(abs($window['from']->diffInMinutes($window['to'] ?? $now)) / 60))
+            : 8760;
+
+        return $window;
+    }
+
+    private function hourWindowLabel(int $hours): string
+    {
+        return match ($hours) {
+            1 => 'Last hour',
+            24 => 'Last 24 hours',
+            72 => 'Last 3 days',
+            168 => 'Last 7 days',
+            default => "Last {$hours} hours",
+        };
+    }
+
+    private function filteredSubmissionQuery(?string $countryCode, mixed $receivedSince, array $filters, mixed $receivedUntil = null): Builder
     {
         $query = MobileSubmission::query()
             ->when($countryCode, fn (Builder $query) => $query->where('country_code', $countryCode))
-            ->where('received_at', '>=', $receivedSince);
+            ->when($receivedSince, fn (Builder $query) => $query->where('received_at', '>=', $receivedSince))
+            ->when($receivedUntil, fn (Builder $query) => $query->where('received_at', '<=', $receivedUntil));
 
         return $this->applyFilters($query, $filters);
     }
